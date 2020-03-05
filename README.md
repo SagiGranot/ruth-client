@@ -1,3 +1,10 @@
+Ruth!
+You can run TestViewshed.html in the browser.
+it loads a map that calculates viewshed from any point.
+just click on the map in the point to calculate viewshed from. might take a few seconds...
+
+
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
