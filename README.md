@@ -2,8 +2,11 @@
 You can run TestViewshed.html in the browser.<br />
 it loads a map that calculates viewshed from any point.<br />
 just click on the map in the point to calculate viewshed from. might take a few seconds...<br />
-
-
+[Click here](https://developers.arcgis.com/javascript/latest/sample-code/geoprocessing-viewshed/index.html) to see the example code in ArcGIS API
+ <br />
+### Credentials for [ArcGIS for developers](https://developers.arcgis.com/)
+Username: RuthProject<br />
+Password: data1data2<br />
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
