@@ -1,7 +1,7 @@
-Ruth!
-You can run TestViewshed.html in the browser.
-it loads a map that calculates viewshed from any point.
-just click on the map in the point to calculate viewshed from. might take a few seconds...
+# Ruth!
+You can run TestViewshed.html in the browser.<br />
+it loads a map that calculates viewshed from any point.<br />
+just click on the map in the point to calculate viewshed from. might take a few seconds...<br />
 
 
 
