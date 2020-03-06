@@ -12,37 +12,165 @@
       rel="stylesheet"
       href="https://js.arcgis.com/4.14/esri/themes/light/main.css"
     />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
     <script src="https://js.arcgis.com/4.14/"></script>
 
     <script>
+      var socket = io('http://localhost:8080');
+
       require([
+        "esri/Map",
         "esri/WebScene",
         "esri/views/SceneView",
         "esri/widgets/LineOfSight",
         "esri/widgets/Expand",
         "esri/geometry/Point",
         "esri/Graphic",
+        "esri/layers/GraphicsLayer",
+        "esri/tasks/Geoprocessor",
+        "esri/tasks/support/LinearUnit",
+        "esri/tasks/support/FeatureSet",
         "esri/core/watchUtils"
       ], function(
+        Map,
         WebScene,
         SceneView,
         LineOfSightWidget,
         Expand,
         Point,
         Graphic,
+        GraphicsLayer,
+        Geoprocessor,
+        LinearUnit,
+        FeatureSet,
         watchUtils
       ) {
+
+        var gpUrl =
+          "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed";
+
+        var map = new Map({
+          basemap: "hybrid",
+          ground: "world-elevation"
+        });
+
+
         //Load a web scene and set it to the map property in a SceneView.
         const scene = new WebScene({
           portalItem: {
             id: "82127fea11d6439abba3318cb93252f7"
           }
         });
+
         const view = new SceneView({
-          map: scene,
-          container: "viewDiv"
+          map: map,
+          container: "viewDiv",
+          camera: {
+            position: [7.654, 45.919, 5184],
+            tilt: 80
+          }
         });
 
+        //------------- VIEWSHED ----------------
+        var graphicsLayer = new GraphicsLayer();
+        map.add(graphicsLayer);
+
+
+        var markerSymbol = {
+          type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+          color: [255, 0, 0],
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: [255, 255, 255],
+            width: 2
+          }
+        };
+
+        //Viewshed fill
+        var fillSymbol = {
+          type: "simple-fill", // autocasts as new SimpleFillSymbol()
+          color: [226, 119, 40, 0.75],
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: [255, 255, 255],
+            width: 1
+          }
+        };
+
+        var gp = new Geoprocessor(gpUrl);
+        gp.outSpatialReference = {
+          // autocasts as new SpatialReference()
+          wkid: 102100
+        };
+
+        // view.on("click", computeViewshed);
+
+        view.on("click", sendLocation);
+
+        function drawMarker(location){
+          const {longitude, latitude} = location;
+
+          console.log(longitude + ", " + latitude);
+          var point = new Point(longitude, latitude);
+
+          var inputGraphic = new Graphic({
+            geometry: point,
+            symbol: markerSymbol
+          });
+
+          graphicsLayer.add(inputGraphic);
+        }
+
+        function sendLocation(event){
+          const location = {latitude: event.mapPoint.latitude, longitude: event.mapPoint.longitude}
+          socket.emit("SEND_LOCATION", location);
+          // drawMarker(event.eventPoint);
+        }
+
+        function computeViewshed(event) {
+          graphicsLayer.removeAll();
+
+          var point = new Point({
+            longitude: event.mapPoint.longitude,
+            latitude: event.mapPoint.latitude
+          });
+
+          var inputGraphic = new Graphic({
+            geometry: point,
+            symbol: markerSymbol
+          });
+
+          graphicsLayer.add(inputGraphic);
+
+          var inputGraphicContainer = [];
+          inputGraphicContainer.push(inputGraphic);
+          var featureSet = new FeatureSet();
+          featureSet.features = inputGraphicContainer;
+
+          var vsDistance = new LinearUnit();
+          vsDistance.distance = 3;
+          vsDistance.units = "miles";
+
+          var params = {
+            Input_Observation_Point: featureSet,
+            Viewshed_Distance: vsDistance
+          };
+
+          gp.execute(params).then(drawResultData);
+        }
+
+        function drawResultData(result) {
+          var resultFeatures = result.results[0].value.features;
+          // Assign each resulting graphic a symbol
+          var viewshedGraphics = resultFeatures.map(function(feature) {
+            feature.symbol = fillSymbol;
+            return feature;
+          });
+          //Add the resulting graphics to the graphics layer
+          graphicsLayer.addMany(viewshedGraphics);
+        }
+
+        //------------ LINE OF SIGHT --------------
         //Initialize the LineOfSight widget
         const lineOfSightWidget = new LineOfSightWidget({
           view: view,
@@ -55,7 +183,6 @@
           calcLineOfSight();
         });
 
-
         // watch when a new target is added or removed
         viewModel.targets.on("change", function(event) {
           event.added.forEach(function(target) {
@@ -67,9 +194,9 @@
 
         //init enemy (observer) and targets
         viewModel.observer = new Point({
-          latitude: 42.3486,
-          longitude: -71.0520,
-          z: 2
+          latitude: 45.97406769726578,
+          longitude: 7.655679901160549,
+          z: 3991.9613455347717
         });
 
         viewModel.targets = [
@@ -109,6 +236,10 @@
             .getItemAt(0);
 
           document
+            .getElementById("elevationInput")
+            .addEventListener("change", updateElevation);
+
+          document
             .getElementById("layerVisibility")
             .addEventListener("change", function(event) {
               plannedBuildingsLayer.visible = event.target.checked;
@@ -120,8 +251,21 @@
               setTargets();
               setEnemy();
             });
+
+            document
+            .getElementById("removeMarkers")
+            .addEventListener("click", function(event) {
+              removeAllMarkers();
+            });
+
         });
 
+        function updateElevation(ev) {
+            // Turn ground layers visibility on/off
+            map.ground.layers.forEach(function(layer) {
+              layer.visible = ev.target.checked;
+            });
+          }
 
           function calcLineOfSight() {
           const linesOfSight = []
@@ -130,26 +274,26 @@
             const targetLineOfSight = createTargetLineOfSight(target);
             linesOfSight.push(targetLineOfSight)
           });
+          linesOfSight.forEach( line => console.log(line.pos.latitude +", " + line.pos.longitude +", "+ line.pos.z))
           console.log(linesOfSight)
         }
 
           function setEnemy(lat, lon, z){
             viewModel.observer = new Point({
-                latitude: lat || 42.3486,
-                longitude: lon || -71.0520,
-                z: z || 50
+                latitude: lat || 45.97406529233771,
+                longitude: lon || 7.655996720681814,
+                z: z || 3965.8866488821805
               });
           }
 
           function setTargets(lat, lon, z){
             viewModel.targets = [
-            createTarget(42.34647614784475, -71.05277511755227, 9.49985658749938),
-            createTarget(42.346997198240324,  -71.05280940178817, 2.6080709220841527),
-            createTarget(42.34702787101899, -71.05261722256908, 2.487462418153882)
-            // createTarget(42.34702904172324, -71.0524130469284, 2.3413218958303332),
-            // createTarget(42.34709890306053, -71.05313857981338, 2.762142044492066),
-            // createTarget(42.34710090716876, -71.05252099304188, 2.341314991004765),
-            // createTarget(42.347078732827654,  -71.0529189813543, 2.5621451437473297)
+              createTarget(45.96784892769482, 7.651410484784997, 3253.8066500881687),
+              createTarget(45.968743719777265, 7.656008021299391, 3211.2172870952636),
+              createTarget(45.96929103821426, 7.658109535605021, 3196.050911039114),
+              createTarget(45.96974538523825, 7.660740349503241, 3198.5217655124143),
+              createTarget(45.97059670821929, 7.662709157934733, 3204.8219937318936),
+              createTarget(45.97152661820499, 7.665263530773247, 3210.3340635905042)
             ]
           }
 
@@ -177,7 +321,18 @@
                     z: target.intersectedLocation.z}
             }
           }
-      });
+
+          function removeAllMarkers() {
+            graphicsLayer.removeAll();
+          }
+
+          socket.on('SEND_LOCATION', drawMarker);
+          socket.on('event', function(data){});
+          socket.on('disconnect', function(){});
+        });
+
+
+
     </script>
 
     <style>
@@ -199,12 +354,19 @@
     <div id="viewDiv">
       <div id="viewDiv">
         <div id="menu" class="esri-widget">
+          <div id="elevationDiv" class="esri-widget">
+            <label
+              >Elevation: <input id="elevationInput" type="checkbox" checked="yes" />
+            </label>
+          </div>
           <h3>Line of sight analysis</h3>
           <input type="checkbox" id="layerVisibility" checked /><label
             for="layerVisibility"
             >Show development layer</label
           >
           <button id="updateEnemyBtn">update enemy position</button>
+          <button id="removeMarkers">RemoveAllMarkers</button>
+
           <div id="losWidget"></div>
         </div>
       </div>
