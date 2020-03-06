@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Line of sight widget - 4.14</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.14/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.14/"></script>
+
+    <script>
+      require([
+        "esri/WebScene",
+        "esri/views/SceneView",
+        "esri/widgets/LineOfSight",
+        "esri/widgets/Expand",
+        "esri/geometry/Point",
+        "esri/Graphic",
+        "esri/core/watchUtils"
+      ], function(
+        WebScene,
+        SceneView,
+        LineOfSightWidget,
+        Expand,
+        Point,
+        Graphic,
+        watchUtils
+      ) {
+        //Load a web scene and set it to the map property in a SceneView.
+        const scene = new WebScene({
+          portalItem: {
+            id: "82127fea11d6439abba3318cb93252f7"
+          }
+        });
+        const view = new SceneView({
+          map: scene,
+          container: "viewDiv"
+        });
+
+        //Initialize the LineOfSight widget
+        const lineOfSightWidget = new LineOfSightWidget({
+          view: view,
+          container: "losWidget"
+        });
+        const viewModel = lineOfSightWidget.viewModel;
+
+        // watch when observer location changes
+        viewModel.watch("observer", function(value) {
+          calcLineOfSight();
+        });
+
+
+        // watch when a new target is added or removed
+        viewModel.targets.on("change", function(event) {
+          event.added.forEach(function(target) {
+            calcLineOfSight();
+            // for each target watch when the intersection changes
+            target.watch("intersectedLocation", calcLineOfSight);
+          });
+        });
+
+        //init enemy (observer) and targets
+        viewModel.observer = new Point({
+          latitude: 42.3486,
+          longitude: -71.0520,
+          z: 2
+        });
+
+        viewModel.targets = [
+          createTarget(42.3472, -71.0533),
+          createTarget(42.346404707451164, -71.05275212742258, 11.999831333756447)
+        ];
+
+
+        // start the tool to create the line of sight analysis
+        viewModel.start();
+        // resume the analysis
+        watchUtils.whenEqualOnce(viewModel, "state", "creating", function(
+          value
+        ) {
+          viewModel.stop();
+        });
+
+        // add an Expand widget to make the menu responsive
+        const expand = new Expand({
+          expandTooltip: "Expand line of sight widget",
+          view: view,
+          content: document.getElementById("menu"),
+          expanded: true
+        });
+
+        view.ui.add(expand, "top-right");
+
+        view.when(function() {
+          // allow user to turn the layer with new planned buildings on/off
+          // and see how the line of sight analysis changes
+          const plannedBuildingsLayer = view.map.layers
+            .filter(function(layer) {
+              return (
+                layer.title === "Boston major projects - MajorProjectsBuildings"
+              );
+            })
+            .getItemAt(0);
+
+          document
+            .getElementById("layerVisibility")
+            .addEventListener("change", function(event) {
+              plannedBuildingsLayer.visible = event.target.checked;
+            });
+
+          document
+            .getElementById("updateEnemyBtn")
+            .addEventListener("click", function(event) {
+              setTargets();
+              setEnemy();
+            });
+        });
+
+
+          function calcLineOfSight() {
+          const linesOfSight = []
+          view.graphics.removeAll();
+          viewModel.targets.forEach((target) => {
+            const targetLineOfSight = createTargetLineOfSight(target);
+            linesOfSight.push(targetLineOfSight)
+          });
+          console.log(linesOfSight)
+        }
+
+          function setEnemy(lat, lon, z){
+            viewModel.observer = new Point({
+                latitude: lat || 42.3486,
+                longitude: lon || -71.0520,
+                z: z || 50
+              });
+          }
+
+          function setTargets(lat, lon, z){
+            viewModel.targets = [
+            createTarget(42.34647614784475, -71.05277511755227, 9.49985658749938),
+            createTarget(42.346997198240324,  -71.05280940178817, 2.6080709220841527),
+            createTarget(42.34702787101899, -71.05261722256908, 2.487462418153882)
+            // createTarget(42.34702904172324, -71.0524130469284, 2.3413218958303332),
+            // createTarget(42.34709890306053, -71.05313857981338, 2.762142044492066),
+            // createTarget(42.34710090716876, -71.05252099304188, 2.341314991004765),
+            // createTarget(42.347078732827654,  -71.0529189813543, 2.5621451437473297)
+            ]
+          }
+
+          function createTarget(lat, lon, z) {
+          return {
+            location: new Point({
+              latitude: lat,
+              longitude: lon,
+              z: z || 0
+            })
+          };
+        }
+
+          function createTargetLineOfSight(target) {
+            const intersection = getLineIntersection(target);
+            const isVisible = intersection ? false : true;
+          const pos = {latitude:target.location.latitude, longitude:target.location.longitude,  z:target.location.z}
+          return {isVisible, pos, intersection}
+        }
+
+          function getLineIntersection(target){
+            if(target && target.intersectedLocation){
+              return {lan: target.intersectedLocation.latitude,
+                      lon: target.intersectedLocation.longitude,
+                    z: target.intersectedLocation.z}
+            }
+          }
+      });
+    </script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+      #menu {
+        padding: 1em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="viewDiv">
+      <div id="viewDiv">
+        <div id="menu" class="esri-widget">
+          <h3>Line of sight analysis</h3>
+          <input type="checkbox" id="layerVisibility" checked /><label
+            for="layerVisibility"
+            >Show development layer</label
+          >
+          <button id="updateEnemyBtn">update enemy position</button>
+          <div id="losWidget"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
