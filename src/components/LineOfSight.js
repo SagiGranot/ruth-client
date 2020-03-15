@@ -1,8 +1,15 @@
 import React, { Component } from 'react'
 import { loadModules } from 'esri-loader';
+import socketIOClient from "socket.io-client";
+const clone = require('rfdc')()
+const Deploy = require('../schema/Deploy.json');
 
+var socket;
 export class LineOfSight extends Component {
-  state = {};
+  constructor() {
+    super();
+    socket = socketIOClient('http://localhost:8080');
+  }
 
   componentDidMount() {
     loadModules(
@@ -35,6 +42,8 @@ export class LineOfSight extends Component {
 
         const viewModel = lineOfSightWidget.viewModel;
 
+        var graphicsLayer = new GraphicsLayer();
+        this.props.view.map.add(graphicsLayer);
         // watch when observer location changes
         viewModel.watch('observer', function(value) {
           // DO LOGIC
@@ -51,6 +60,37 @@ export class LineOfSight extends Component {
             );
           });
         });
+
+        this.props.view.on("click", sendLocation);
+
+        function sendLocation(event){
+          const deploy = clone(Deploy);
+          deploy.location.coordinates = [event.mapPoint.longitude, event.mapPoint.latitude];
+          socket.emit("SEND_LOCATION", deploy);
+          // drawMarker(event.eventPoint);
+        }
+
+        function drawMarker(location){
+          const [longitude, latitude] =  location.location.coordinates;
+          var point = new Point(longitude, latitude);
+
+          var inputGraphic = new Graphic({
+            geometry: point,
+            symbol: markerSymbol
+          });
+
+          graphicsLayer.add(inputGraphic);
+        }
+
+        var markerSymbol = {
+          type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+          color: [255, 0, 0],
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: [255, 255, 255],
+            width: 2
+          }
+        };
 
         viewModel.observer = new Point({
           latitude: 45.97406769726578,
@@ -69,6 +109,7 @@ export class LineOfSight extends Component {
 
                   // Insert text
         this.props.view.ui.add(expand, 'bottom-right');
+        socket.on('SEND_LOCATION', drawMarker);
 
   })
 }
