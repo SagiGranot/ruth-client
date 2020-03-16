@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { loadModules } from 'esri-loader';
 import socketIOClient from "socket.io-client";
-import axios from 'axios';
 import {Marker} from '../resources/markers';
 const clone = require('rfdc')()
 const Deploy = require('../schema/Deploy.json');
@@ -36,10 +35,6 @@ export class LineOfSight extends Component {
         FeatureSet,
         watchUtils
       ]) => {
-
-        //get all deployments
-
-
         const lineOfSightWidget = new LineOfSightWidget({
           view: this.props.view,
           container: 'losWidget'
@@ -99,16 +94,6 @@ export class LineOfSight extends Component {
         });
 
         this.props.view.on("click", this.sendLocation);
-
-        // function sendLocation(event){
-        //   const deploy = clone(Deploy);
-        //   console.log(event.mapPoint.longitude)
-        //   console.log(event.mapPoint.latitude)
-        //   console.log(event.mapPoint.z)
-        //   deploy.location.coordinates = [event.mapPoint.longitude, event.mapPoint.latitude];
-        //   socket.emit("SEND_LOCATION", deploy);
-          // drawMarker(event.eventPoint);
-        // }
 
         function drawMarker(item){
           console.log(item.deployType);
