@@ -1,14 +1,14 @@
 import React, { Component } from 'react'
 import { loadModules } from 'esri-loader';
 import socketIOClient from "socket.io-client";
+import axios from 'axios';
+import {Marker} from '../resources/markers';
 const clone = require('rfdc')()
 const Deploy = require('../schema/Deploy.json');
-
 export class LineOfSight extends Component {
   constructor() {
     super();
     this.socket = socketIOClient('http://localhost:8080');
-
     this.sendLocation = this.sendLocation.bind(this)
   }
 
@@ -36,6 +36,10 @@ export class LineOfSight extends Component {
         FeatureSet,
         watchUtils
       ]) => {
+
+        //get all deployments
+
+
         const lineOfSightWidget = new LineOfSightWidget({
           view: this.props.view,
           container: 'losWidget'
@@ -62,29 +66,62 @@ export class LineOfSight extends Component {
           });
         });
 
+
+        fetch('http://localhost:8080/location', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            "long": "7.666636506834368",
+            "latt": "45.97124827851157"
+          }),
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          data.forEach(deploy => {
+            drawMarker(deploy)
+
+            if(deploy.deployType === "Friend" || deploy.deployType === "friendly"){
+              viewModel.targets.push({
+                location: new Point({
+                  latitude: deploy.location.coordinates[1],
+                  longitude: deploy.location.coordinates[0],
+                  z: deploy.location.elevation
+                })
+              })
+            }
+          })
+          console.log('Success:', data);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+
         this.props.view.on("click", this.sendLocation);
 
-        function drawMarker(location){
-          const [longitude, latitude] =  location.location.coordinates;
+        // function sendLocation(event){
+        //   const deploy = clone(Deploy);
+        //   console.log(event.mapPoint.longitude)
+        //   console.log(event.mapPoint.latitude)
+        //   console.log(event.mapPoint.z)
+        //   deploy.location.coordinates = [event.mapPoint.longitude, event.mapPoint.latitude];
+        //   socket.emit("SEND_LOCATION", deploy);
+          // drawMarker(event.eventPoint);
+        // }
+
+        function drawMarker(item){
+          console.log(item.deployType);
+          const [longitude, latitude] =  item.location.coordinates;
           var point = new Point(longitude, latitude);
 
           var inputGraphic = new Graphic({
             geometry: point,
-            symbol: markerSymbol
+            symbol: Marker[item.deployType]
           });
 
           graphicsLayer.add(inputGraphic);
         }
-
-        var markerSymbol = {
-          type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
-          color: [0, 0, 0],
-          outline: {
-            // autocasts as new SimpleLineSymbol()
-            color: [255, 255, 255],
-            width: 2
-          }
-        };
 
         viewModel.observer = new Point({
           latitude: 45.97406769726578,
@@ -130,6 +167,7 @@ export class LineOfSight extends Component {
 
   })
 }
+
 sendLocation(event){
   const deploy = clone(Deploy);
   deploy.location.coordinates = [event.mapPoint.longitude, event.mapPoint.latitude];
