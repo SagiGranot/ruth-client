@@ -78,7 +78,7 @@ export class LineOfSight extends Component {
 
         var markerSymbol = {
           type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
-          color: [255, 0, 0],
+          color: [0, 0, 0],
           outline: {
             // autocasts as new SimpleLineSymbol()
             color: [255, 255, 255],
@@ -101,9 +101,32 @@ export class LineOfSight extends Component {
           expanded: true
         });
 
-                  // Insert text
+        // Insert text
         this.props.view.ui.add(expand, 'bottom-right');
         this.socket.on('SEND_LOCATION', drawMarker);
+
+
+        //
+        fetch('http://localhost:8080/location', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            "long": "7.666636506834368",
+            "latt": "45.97124827851157"
+          }),
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          data.forEach(deploy => {
+            drawMarker(deploy)
+          })
+          console.log('Success:', data);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
 
   })
 }
