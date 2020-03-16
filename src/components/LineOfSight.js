@@ -4,11 +4,12 @@ import socketIOClient from "socket.io-client";
 const clone = require('rfdc')()
 const Deploy = require('../schema/Deploy.json');
 
-var socket;
 export class LineOfSight extends Component {
   constructor() {
     super();
-    socket = socketIOClient('http://localhost:8080');
+    this.socket = socketIOClient('http://localhost:8080');
+
+    this.sendLocation = this.sendLocation.bind(this)
   }
 
   componentDidMount() {
@@ -61,14 +62,7 @@ export class LineOfSight extends Component {
           });
         });
 
-        this.props.view.on("click", sendLocation);
-
-        function sendLocation(event){
-          const deploy = clone(Deploy);
-          deploy.location.coordinates = [event.mapPoint.longitude, event.mapPoint.latitude];
-          socket.emit("SEND_LOCATION", deploy);
-          // drawMarker(event.eventPoint);
-        }
+        this.props.view.on("click", this.sendLocation);
 
         function drawMarker(location){
           const [longitude, latitude] =  location.location.coordinates;
@@ -109,9 +103,15 @@ export class LineOfSight extends Component {
 
                   // Insert text
         this.props.view.ui.add(expand, 'bottom-right');
-        socket.on('SEND_LOCATION', drawMarker);
+        this.socket.on('SEND_LOCATION', drawMarker);
 
   })
+}
+sendLocation(event){
+  const deploy = clone(Deploy);
+  deploy.location.coordinates = [event.mapPoint.longitude, event.mapPoint.latitude];
+  this.socket.emit("SEND_LOCATION", deploy);
+  // drawMarker(event.eventPoint);
 }
 
   render() {
