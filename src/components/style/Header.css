@@ -1,0 +1,32 @@
+header {
+  width: 100%;
+  height: 80px;
+  background-color: rgb(54, 54, 54);
+}
+
+h2 {
+  text-align: center;
+  align-items: center;
+  position: relative;
+  display: inline;
+}
+h1 {
+  border-left-style: solid;
+  padding-top: 18px;
+  font-family: "Titillium Web", monospace;
+  letter-spacing: -1px;
+  text-align: center;
+  color: rgb(156, 156, 156);
+  padding-left: 12px;
+  position: relative;
+  margin-left: 33px;
+  display: inline;
+}
+
+img {
+  margin-left: 20px;
+  padding-top: 6px;
+  float: left;
+  width: 70px;
+  height: 70px;
+}
