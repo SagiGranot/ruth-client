@@ -1,0 +1,65 @@
+.webmap {
+  height: 90vh;
+}
+
+.App{
+  height:100%;
+}
+
+#rightContainer{
+  /* position: absolute; */
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+
+}
+/* overview */
+#overviewDiv {
+  /* position: absolute; */
+  top: 12px;
+  right: 12px;
+  width: 200px;
+  height: 200px;
+  border-radius: 123px;
+  border: 1px solid black;
+  z-index: 1;
+  overflow: hidden;
+}
+
+#extentDiv {
+  background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  z-index: 2;
+}
+
+/* camera */
+#buttonsDiv {
+  /* position: absolute; */
+  top: 12px;
+  right: 12px;
+  padding: 12px;
+  background-color: rgba(200, 200, 200, 0.5);
+  border: 1px solid black;
+}
+
+#indicatorSpan {
+  display: inline-block;
+  vertical-align: middle;
+  width: 30px;
+  height: 30px;
+  background-color: rgba(100, 100, 100, 0.8);
+  border: 2px solid #ccc;
+}
+
+
+/* footer */
+
+footer {
+  width: 100%;
+  position: absolute;
+  bottom: 0px;
+  height: 29px;
+  background-color: rgb(54, 54, 54);
+}
