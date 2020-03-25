@@ -64,8 +64,28 @@ const Marker = {
         {
           type: 'icon',
           anchor: 'center',
+          width:100,
+          height:100,
           resource: {
-            href: 'https://image.flaticon.com/icons/svg/1693/1693487.svg'
+            href: 'https://i.imgur.com/UPDzknj.png'
+          },
+          size: 48
+        }
+      ]
+    }
+  },
+  meMarker: {
+    value: 'me',
+    symbol: {
+      type: 'point-3d',
+      symbolLayers: [
+        {
+          type: 'icon',
+          anchor: 'center',
+          width:100,
+          height:100,
+          resource: {
+            href: 'https://i.imgur.com/NowMtcF.png'
           },
           size: 48
         }

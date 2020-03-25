@@ -100,7 +100,7 @@ export class Viewshed extends Component {
 
 
         let targets = this.props.deployments.filter(target => target.deployType === 'Enemy');
-        computeViewshed(targets);
+         computeViewshed(targets);
 
         // this.socket.on('SEND_LOCATION', updateTargets);
 

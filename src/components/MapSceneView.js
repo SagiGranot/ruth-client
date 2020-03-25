@@ -6,6 +6,7 @@ import { Viewshed } from './Viewshed';
 import { MapOverview } from './MapOverview';
 import { Camera } from './Camera';
 import {deployLayerOpt} from '../configs/deployLayer';
+
 export class MapSceneView extends React.Component {
   constructor(props) {
     super(props);
@@ -46,6 +47,8 @@ export class MapSceneView extends React.Component {
           var arrMarkers = [];
           deployments = data;
           data.forEach(deploy => {
+            if(deploy.deployId === '3')
+              deploy.deployType = 'me';
             arrMarkers.push(drawMarker(deploy));
           });
 

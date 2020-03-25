@@ -30,7 +30,7 @@ export const deployLayerOpt = {
     renderer: {
       type: "unique-value",
       field: "deployType",
-      uniqueValueInfos: [Marker.FriendlyMarker,Marker.EnemyMarker]
+      uniqueValueInfos: [Marker.FriendlyMarker,Marker.EnemyMarker, Marker.meMarker]
     },
     labelingInfo: [ Marker.amountLabel ],
     popupTemplate: Marker.popupTemplate
