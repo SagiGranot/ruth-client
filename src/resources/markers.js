@@ -51,7 +51,7 @@ const Marker = {
           resource: {
             href: 'https://image.flaticon.com/icons/svg/1693/1693487.svg'
           },
-          size: 48
+          size: 36
         }
       ]
     }
@@ -69,7 +69,7 @@ const Marker = {
           resource: {
             href: 'https://i.imgur.com/UPDzknj.png'
           },
-          size: 48
+          size: 36
         }
       ]
     }
@@ -82,12 +82,13 @@ const Marker = {
         {
           type: 'icon',
           anchor: 'center',
-          width:100,
-          height:100,
+          width:60,
+          height:60,
           resource: {
-            href: 'https://i.imgur.com/NowMtcF.png'
+            // href: 'https://i.imgur.com/NowMtcF.png'
+            href: 'https://i.imgur.com/lb9cyRR.png'
           },
-          size: 48
+          size: 32
         }
       ]
     }
