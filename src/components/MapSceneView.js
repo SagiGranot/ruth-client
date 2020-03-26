@@ -2,8 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { loadModules } from 'esri-loader';
 import { LineOfSight } from './LineOfSight';
+import { Viewshed } from './Viewshed';
 import { MapOverview } from './MapOverview';
 import { Camera } from './Camera';
+import {deployLayerOpt} from '../configs/deployLayer';
 
 export class MapSceneView extends React.Component {
   constructor(props) {
@@ -30,7 +32,7 @@ export class MapSceneView extends React.Component {
         container: this.mapRef.current,
         map: map,
         camera: {
-          position: [7.654, 45.919, 5184],
+          position: [7.654, 45.919, 5184], // change map location [lon , lat, height]
           tilt: 80
         }
       });
@@ -45,6 +47,8 @@ export class MapSceneView extends React.Component {
           var arrMarkers = [];
           deployments = data;
           data.forEach(deploy => {
+            if(deploy.deployId === '3')
+              deploy.deployType = 'me';
             arrMarkers.push(drawMarker(deploy));
           });
 
@@ -55,19 +59,19 @@ export class MapSceneView extends React.Component {
           const topRightContainer = document.createElement('div');
           topRightContainer.id = 'rightContainer';
           const cameraElm = document.createElement('div');
-          const editReports = document.createElement('div');
           const mapOverviewElm = document.createElement('div');
           const lineOfSightElm = document.createElement('div');
+          const viewshedElm = document.createElement('div');
 
           topRightContainer.appendChild(cameraElm);
           topRightContainer.appendChild(mapOverviewElm);
           this.view.ui.add(topRightContainer, 'top-right');
           this.view.ui.add(lineOfSightElm, 'bottom-right');
-          // this.view.ui.add(editReports, 'bottom-left');
+          this.view.ui.add(viewshedElm, 'bottom-right');
           ReactDOM.render(<Camera view={this.view} />, cameraElm);
           ReactDOM.render(<LineOfSight view={this.view} deployments={deployments}/>, lineOfSightElm);
+          ReactDOM.render(<Viewshed view={this.view} deployments={deployments}/>, viewshedElm);
           ReactDOM.render(<MapOverview view={this.view} />, mapOverviewElm);
-          // ReactDOM.render(<EditReports view={this.view} />, editReports);
 
         })
         .catch(error => {
@@ -81,76 +85,19 @@ export class MapSceneView extends React.Component {
             latitude: item.location.coordinates[1],
             longitude: item.location.coordinates[0],
           },
-          attributes: {...item},
-          symbol: {
-
-          }
+          attributes: {...item, totalAmount: `${getTotalAmount(item)}`},
         });
         return graphic;
       }
 
-      // var foundLayer = this.view.map.allLayers.find(function(layer) {
-      //   return layer.title === "deployments";
-      //  });
-
-
-      function createLayer(graphics) {
-        return new FeatureLayer({
-          source: graphics,
-          title: 'deployments',
-          objectIdField: 'OBJECTID',
-          geometryType: 'point',
-          spatialReference: { wkid: 4326 },
-          fields: [
-            {
-              name: 'deployType',
-              alias: 'TYPE',
-              type: 'string'
-            },
-            {
-              name: 'additionalInfo',
-              alias: 'INFO',
-              type: 'string'
-            },
-          ],
-          renderer: {
-            type: "unique-value",
-            field: "deployType",
-            defaultSymbol: { type: "simple-fill" },
-            uniqueValueInfos: [{
-                value: "Friendly",
-                symbol: {
-                  type: 'web-style',
-                  name: "shield-3",
-                  styleName: "Esri2DPointSymbolsStyle"
-                }
-              },
-              {
-                value: "Enemy",
-                symbol: {
-                  type: 'web-style',
-                  name: "square-3",
-                  styleName: "Esri2DPointSymbolsStyle"
-              }
-            }
-            ]
-          },
-          popupTemplate: {
-            title: '{deployType}',
-            content:[{
-              type: "fields",
-              fieldInfos: [
-                {
-                  fieldName: "additionalInfo",
-                  label: "Description"
-                }
-              ]
-            }]
-          }
-        });
+      function getTotalAmount(item) {
+        return item.deployment.reduce( (total, i) =>  total + i.amount , 0)
       }
 
-
+      function createLayer(graphics) {
+        deployLayerOpt.source = graphics
+        return new FeatureLayer(deployLayerOpt);
+      }
     });
   }
 

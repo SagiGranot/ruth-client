@@ -6,8 +6,8 @@ const Deploy = require('../schema/Deploy.json');
 export class LineOfSight extends Component {
   constructor() {
     super();
-    this.socket = socketIOClient('http://localhost:8080');
-    this.sendLocation = this.sendLocation.bind(this);
+    // this.socket = socketIOClient('http://localhost:8080');
+    // this.sendLocation = this.sendLocation.bind(this);
   }
 
   componentDidMount() {
@@ -64,9 +64,9 @@ export class LineOfSight extends Component {
         this.props.view.on('click', this.sendLocation);
 
         viewModel.observer = new Point({
-          latitude: this.props.deployments[1].location.coordinates[1],
-          longitude: this.props.deployments[1].location.coordinates[0],
-          z: 3480
+          latitude: this.props.deployments[5].location.coordinates[1],
+          longitude: this.props.deployments[5].location.coordinates[0],
+          z: this.props.deployments[5].location.elevation
         });
 
         this.props.deployments.forEach(target => {
@@ -89,7 +89,7 @@ export class LineOfSight extends Component {
         });
 
         this.props.view.ui.add(expand, 'bottom-right');
-        this.socket.on('SEND_LOCATION', updateTargets);
+        // this.socket.on('SEND_LOCATION', updateTargets);
 
         function updateTargets(item) {
           viewModel.targets.push({
@@ -153,18 +153,19 @@ export class LineOfSight extends Component {
   }
 
   sendLocation(event) {
-    this.props.view.hitTest(event.screenPoint).then( response => {
-      var graphics = response.results;
-      if (!graphics.length) {
-        const deploy = clone(Deploy);
-        deploy.location.coordinates = [
-          event.mapPoint.longitude,
-          event.mapPoint.latitude
-        ];
-        deploy.location.elevation = event.mapPoint.z;
-        this.socket.emit('SEND_LOCATION', deploy);
-      }
-    });
+    console.log(event.mapPoint);
+    // this.props.view.hitTest(event.screenPoint).then( response => {
+    //   var graphics = response.results;
+    //   if (!graphics.length) {
+    //     const deploy = clone(Deploy);
+    //     deploy.location.coordinates = [
+    //       event.mapPoint.longitude,
+    //       event.mapPoint.latitude
+    //     ];
+    //     deploy.location.elevation = event.mapPoint.z;
+    //     this.socket.emit('SEND_LOCATION', deploy);
+    //   }
+    // });
   }
 
   render() {
