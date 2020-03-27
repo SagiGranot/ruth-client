@@ -32,7 +32,7 @@ export class MapSceneView extends React.Component {
         container: this.mapRef.current,
         map: map,
         camera: {
-          position: [7.654, 45.919, 5184], // change map location [lon , lat, height]
+          position: [35.549, 33.149, 2184], // change map location [lon , lat, height]
           tilt: 80
         }
       });
