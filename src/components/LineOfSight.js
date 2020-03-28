@@ -6,7 +6,7 @@ const Deploy = require('../schema/Deploy.json');
 export class LineOfSight extends Component {
   constructor() {
     super();
-    // this.socket = socketIOClient('http://localhost:8080');
+    this.socket = socketIOClient('http://localhost:8080');
     // this.sendLocation = this.sendLocation.bind(this);
   }
 
@@ -84,20 +84,30 @@ export class LineOfSight extends Component {
           expandTooltip: 'Expand line of sight widget',
           view: this.view,
           content: document.getElementById('menu'),
-          expanded: true
+          expanded: false
         });
 
         this.props.view.ui.add(expand, 'bottom-right');
-        // this.socket.on('SEND_LOCATION', updateTargets);
+        this.socket.on('SEND_LOCATION', updateTargets);
 
         function updateTargets(item) {
-          viewModel.targets.push({
-            location: new Point({
-              latitude: item.location.coordinates[1],
-              longitude: item.location.coordinates[0],
-              z: item.location.elevation || 3200
-            })
-          });
+          viewModel.targets.forEach( (target,i) => {
+            if (( item.prevlocation.coordinates[0] === target.location.longitude) 
+            && (item.prevlocation.coordinates[1] === target.location.latitude)
+            && (item.prevlocation.elevation === target.location.z)) {
+              viewModel.targets.splice(i,1); 
+              viewModel.targets.push({
+                location: new Point({
+                  latitude: item.location.coordinates[1],
+                  longitude: item.location.coordinates[0],
+                  z: item.location.elevation || 3200
+                })
+              });
+            }
+          })
+       
+          
+          
 
           let graphic = new Graphic({
             geometry: {
