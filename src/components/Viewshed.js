@@ -103,7 +103,7 @@ export class Viewshed extends Component {
           graphicsLayer.addMany(viewshedGraphics);
         }
 
-        //computeViewshed();
+        computeViewshed();
 
         function selectFeature(deploy) {
           console.log(deploy);
@@ -130,7 +130,7 @@ export class Viewshed extends Component {
                 .applyEdits(edits)
                 .then(function(editsResult) {
                   if (deploy.deployType === "Enemy") {
-                    // computeViewshed();
+                    computeViewshed();
                   }
                 })
                 .catch(function(error) {
