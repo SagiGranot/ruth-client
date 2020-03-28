@@ -92,10 +92,10 @@ export class LineOfSight extends Component {
 
         function updateTargets(item) {
           viewModel.targets.forEach( (target,i) => {
-            if (( item.prevlocation.coordinates[0] === target.location.longitude) 
+            if (( item.prevlocation.coordinates[0] === target.location.longitude)
             && (item.prevlocation.coordinates[1] === target.location.latitude)
             && (item.prevlocation.elevation === target.location.z)) {
-              viewModel.targets.splice(i,1); 
+              viewModel.targets.splice(i,1);
               viewModel.targets.push({
                 location: new Point({
                   latitude: item.location.coordinates[1],
@@ -105,57 +105,6 @@ export class LineOfSight extends Component {
               });
             }
           })
-       
-          
-          
-
-          let graphic = new Graphic({
-            geometry: {
-              type: 'point',
-              latitude: item.location.coordinates[1],
-              longitude: item.location.coordinates[0]
-            },
-            attributes: { ...item },
-            symbol: {}
-          });
-
-          const addEdits = {
-            addFeatures: [graphic]
-          };
-
-          featureLayer
-            .applyEdits(addEdits)
-            .then(function(results) {
-              // if edits were removed
-              if (results.deleteFeatureResults.length > 0) {
-                console.log(
-                  results.deleteFeatureResults.length,
-                  'features have been removed'
-                );
-              }
-              // if features were added - call queryFeatures to return
-              //    newly added graphics
-              if (results.addFeatureResults.length > 0) {
-                var objectIds = [];
-                results.addFeatureResults.forEach(function(item) {
-                  objectIds.push(item.objectId);
-                });
-                // query the newly added features from the layer
-                featureLayer
-                  .queryFeatures({
-                    objectIds: objectIds
-                  })
-                  .then(function(results) {
-                    console.log(
-                      results.features.length,
-                      'features have been added.'
-                    );
-                  });
-              }
-            })
-            .catch(function(error) {
-              console.log(error);
-            });
         }
       }
     );
