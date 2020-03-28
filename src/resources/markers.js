@@ -49,7 +49,7 @@ const Marker = {
           type: "icon",
           anchor: "center",
           resource: {
-            href: "https://image.flaticon.com/icons/svg/1693/1693487.svg"
+            href: "https://i.imgur.com/qT34iLD.png"
           },
           size: 36
         }
@@ -67,7 +67,7 @@ const Marker = {
           width: 100,
           height: 100,
           resource: {
-            href: "https://i.imgur.com/UPDzknj.png"
+            href: "https://i.imgur.com/JmcioEL.png"
           },
           size: 36
         }
