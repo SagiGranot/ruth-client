@@ -96,15 +96,15 @@ export class LineOfSight extends Component {
             && (item.prevlocation.coordinates[1] === target.location.latitude)
             && (item.prevlocation.elevation === target.location.z)) {
               viewModel.targets.splice(i,1);
-              viewModel.targets.push({
-                location: new Point({
-                  latitude: item.location.coordinates[1],
-                  longitude: item.location.coordinates[0],
-                  z: item.location.elevation || 3200
-                })
-              });
             }
           })
+          viewModel.targets.push({
+            location: new Point({
+              latitude: item.location.coordinates[1],
+              longitude: item.location.coordinates[0],
+              z: item.location.elevation || 3200
+            })
+          });
         }
       }
     );

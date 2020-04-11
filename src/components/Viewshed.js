@@ -1,25 +1,25 @@
-import React, { Component } from 'react';
-import { loadModules } from 'esri-loader';
-import socketIOClient from 'socket.io-client';
-const clone = require('rfdc')();
-const Deploy = require('../schema/Deploy.json');
+import React, { Component } from "react";
+import { loadModules } from "esri-loader";
+import socketIOClient from "socket.io-client";
+const clone = require("rfdc")();
+const Deploy = require("../schema/Deploy.json");
 
 export class Viewshed extends Component {
   constructor() {
     super();
-    this.socket = socketIOClient('http://localhost:8080');
+    this.socket = socketIOClient("http://localhost:8080");
     this.sendLocation = this.sendLocation.bind(this);
   }
 
   componentDidMount() {
     loadModules(
       [
-        'esri/geometry/Point',
-        'esri/Graphic',
-        'esri/layers/GraphicsLayer',
-        'esri/tasks/Geoprocessor',
-        'esri/tasks/support/LinearUnit',
-        'esri/tasks/support/FeatureSet'
+        "esri/geometry/Point",
+        "esri/Graphic",
+        "esri/layers/GraphicsLayer",
+        "esri/tasks/Geoprocessor",
+        "esri/tasks/support/LinearUnit",
+        "esri/tasks/support/FeatureSet"
       ],
       { css: true }
     ).then(
@@ -32,14 +32,14 @@ export class Viewshed extends Component {
         FeatureSet
       ]) => {
         var featureLayer = this.props.view.map.allLayers.find(function(layer) {
-          return layer.title === 'deployments';
+          return layer.title === "deployments";
         });
 
         var gpUrl =
-          'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed';
+          "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed";
 
         var fillSymbol = {
-          type: 'simple-fill',
+          type: "simple-fill",
           color: [255, 0, 0, 0.4],
           outline: {
             color: [255, 255, 255, 0.0],
@@ -61,7 +61,7 @@ export class Viewshed extends Component {
           featureLayer
             .queryFeatures({
               where: "deployType = 'Enemy'",
-              outFields: ['*'],
+              outFields: ["*"],
               returnGeometry: true
             })
             .then(function(results) {
@@ -81,7 +81,7 @@ export class Viewshed extends Component {
 
               var vsDistance = new LinearUnit();
               vsDistance.distance = 10;
-              vsDistance.units = 'kilometers';
+              vsDistance.units = "kilometers";
 
               var params = {
                 Input_Observation_Point: featureSet,
@@ -106,21 +106,21 @@ export class Viewshed extends Component {
         computeViewshed();
 
         function selectFeature(deploy) {
-          console.log(deploy)
+          console.log(deploy);
           const deployId = deploy.deployId;
           const queryById = deployId ? `='${deployId}'` : null;
           featureLayer
             .queryFeatures({
-              where: 'deployId' + queryById,
-              outFields: ['*'],
+              where: "deployId" + queryById,
+              outFields: ["*"],
               returnGeometry: true
             })
             .then(function(results) {
               let editFeature = results.features[0];
-              editFeature.geometry['latitude'] = deploy.location.coordinates[1];
-              editFeature.geometry['longitude'] =
+              editFeature.geometry["latitude"] = deploy.location.coordinates[1];
+              editFeature.geometry["longitude"] =
                 deploy.location.coordinates[0];
-              editFeature.geometry['z'] = deploy.location.elevation;
+              editFeature.geometry["z"] = deploy.location.elevation;
 
               const edits = {
                 updateFeatures: [editFeature]
@@ -129,17 +129,17 @@ export class Viewshed extends Component {
               featureLayer
                 .applyEdits(edits)
                 .then(function(editsResult) {
-                  if (deploy.deployType === 'Enemy') {
+                  if (deploy.deployType === "Enemy") {
                     computeViewshed();
                   }
                 })
                 .catch(function(error) {
-                  console.log('error = ', error);
+                  console.log("error = ", error);
                 });
             });
         }
 
-        this.socket.on('SEND_LOCATION', selectFeature);
+        this.socket.on("SEND_LOCATION", selectFeature);
       }
     );
   }
