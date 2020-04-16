@@ -63,9 +63,9 @@ export class LineOfSight extends Component {
 
         this.props.view.on('click', this.sendLocation);
         viewModel.observer = new Point({
-          latitude: this.props.deployments[4].location.coordinates[1],
-          longitude: this.props.deployments[4].location.coordinates[0],
-          z: this.props.deployments[4].location.elevation
+          latitude: this.props.deployments[3].location.coordinates[1],
+          longitude: this.props.deployments[3].location.coordinates[0],
+          z: this.props.deployments[3].location.elevation
         });
 
         this.props.deployments.forEach(target => {
@@ -89,6 +89,7 @@ export class LineOfSight extends Component {
 
         this.props.view.ui.add(expand, 'bottom-right');
         this.socket.on('SEND_LOCATION', updateTargets);
+        this.socket.on('ENEMY_CLOSER', sendAlert);
 
         function updateTargets(item) {
           viewModel.targets.forEach( (target,i) => {
@@ -105,6 +106,11 @@ export class LineOfSight extends Component {
               z: item.location.elevation || 3200
             })
           });
+        }
+
+        function sendAlert(item) {
+          console.log("Enemy is now closer!!!")
+          console.log(item)
         }
       }
     );

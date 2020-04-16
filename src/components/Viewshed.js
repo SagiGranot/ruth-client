@@ -106,7 +106,6 @@ export class Viewshed extends Component {
         computeViewshed();
 
         function selectFeature(deploy) {
-          console.log(deploy);
           const deployId = deploy.deployId;
           const queryById = deployId ? `='${deployId}'` : null;
           featureLayer
