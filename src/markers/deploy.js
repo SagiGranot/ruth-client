@@ -1,45 +1,4 @@
-const Marker = {
-  Enemy: {
-    type: "simple-marker",
-    color: [255, 0, 0],
-    outline: {
-      color: [255, 255, 255],
-      width: 2,
-    },
-  },
-  Friend: {
-    type: "simple-marker",
-    color: [0, 255, 128],
-    outline: {
-      color: [255, 255, 255],
-      width: 2,
-    },
-  },
-  friendly: {
-    type: "simple-marker",
-    color: [0, 255, 128],
-    outline: {
-      color: [255, 255, 255],
-      width: 2,
-    },
-  },
-  amountLabel: {
-    symbol: {
-      type: "text",
-      color: "white",
-      haloColor: "black",
-      haloSize: "4px",
-      text: "You are here",
-      font: {
-        size: 13,
-        family: "Josefin Slab",
-      },
-    },
-    labelPlacement: "center-right",
-    labelExpressionInfo: {
-      expression: "$feature.totalAmount",
-    },
-  },
+const deployMarkers = {
   FriendlyMarker: {
     value: "Friendly",
     symbol: {
@@ -89,7 +48,6 @@ const Marker = {
           width: 60,
           height: 60,
           resource: {
-            // href: 'https://i.imgur.com/NowMtcF.png'
             href: "https://i.imgur.com/lb9cyRR.png",
           },
           size: 32,
@@ -119,6 +77,23 @@ const Marker = {
       },
     ],
   },
+  amountLabel: {
+    symbol: {
+      type: "text",
+      color: "white",
+      haloColor: "black",
+      haloSize: "4px",
+      text: "You are here",
+      font: {
+        size: 13,
+        family: "Josefin Slab",
+      },
+    },
+    labelPlacement: "center-right",
+    labelExpressionInfo: {
+      expression: "$feature.totalAmount",
+    },
+  },
   fillSymbol: {
     type: "simple-fill",
     color: [255, 0, 0, 0.4],
@@ -129,4 +104,4 @@ const Marker = {
   },
 };
 
-export { Marker };
+export { deployMarkers };

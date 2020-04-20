@@ -1,4 +1,4 @@
-import { Marker } from "../resources/markers";
+import { deployMarkers } from "../markers/deploy";
 
 export const deployLayerOpt = {
   title: "deployments",
@@ -36,11 +36,11 @@ export const deployLayerOpt = {
     type: "unique-value",
     field: "deployType",
     uniqueValueInfos: [
-      Marker.FriendlyMarker,
-      Marker.EnemyMarker,
-      Marker.meMarker,
+      deployMarkers.FriendlyMarker,
+      deployMarkers.EnemyMarker,
+      deployMarkers.meMarker,
     ],
   },
-  labelingInfo: [Marker.amountLabel],
-  popupTemplate: Marker.popupTemplate,
+  labelingInfo: [deployMarkers.amountLabel],
+  popupTemplate: deployMarkers.popupTemplate,
 };

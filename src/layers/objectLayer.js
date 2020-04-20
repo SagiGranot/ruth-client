@@ -1,5 +1,4 @@
-import { Marker } from "../resources/markers";
-import { ObjectsMarker } from "../resources/objectsMarker";
+import { objectMarker } from "../markers/object";
 
 export const objectLayerOpt = {
   title: "objects",
@@ -24,13 +23,8 @@ export const objectLayerOpt = {
       type: "string",
     },
     {
-      name: "reportingUserId",
-      alias: "Reporting User",
-      type: "string",
-    },
-    {
-      name: "totalAmount",
-      alias: "AMOUNT",
+      name: "tag",
+      alias: "TAG",
       type: "string",
     },
   ],
@@ -45,13 +39,11 @@ export const objectLayerOpt = {
         valueUnit: "feet",
       },
       {
-        // rotation can be modified with the interactive handle
         type: "rotation",
         field: "ROTATION",
       },
     ],
-    uniqueValueInfos: [ObjectsMarker.BuildingMarker],
+    uniqueValueInfos: [objectMarker.BuildingMarker],
   },
   // labelingInfo: [Marker.amountLabel],
-  popupTemplate: Marker.popupTemplate,
 };

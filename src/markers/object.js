@@ -1,4 +1,4 @@
-const ObjectsMarker = {
+const objectMarker = {
   BuildingMarker: {
     value: "Building",
     symbol: {
@@ -21,4 +21,4 @@ const ObjectsMarker = {
   },
 };
 
-export { ObjectsMarker };
+export { objectMarker };
