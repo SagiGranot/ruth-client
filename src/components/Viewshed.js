@@ -139,7 +139,7 @@ export class Viewshed extends Component {
             });
         }
 
-        this.socket.on("SEND_LOCATION", selectFeature);
+         this.socket.on("SEND_LOCATION", selectFeature);
       }
     );
   }

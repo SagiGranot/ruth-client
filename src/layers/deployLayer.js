@@ -9,28 +9,28 @@ export const deployLayerOpt = {
     {
       name: "deployType",
       alias: "TYPE",
-      type: "string"
+      type: "string",
     },
     {
       name: "additionalInfo",
       alias: "INFO",
-      type: "string"
+      type: "string",
     },
     {
       name: "totalAmount",
       alias: "AMOUNT",
-      type: "string"
+      type: "string",
     },
     {
       name: "deployId",
       alias: "ID",
-      type: "string"
+      type: "string",
     },
     {
       name: "reportingUserId",
       alias: "Reporting User",
-      type: "string"
-    }
+      type: "string",
+    },
   ],
   renderer: {
     type: "unique-value",
@@ -38,9 +38,9 @@ export const deployLayerOpt = {
     uniqueValueInfos: [
       Marker.FriendlyMarker,
       Marker.EnemyMarker,
-      Marker.meMarker
-    ]
+      Marker.meMarker,
+    ],
   },
   labelingInfo: [Marker.amountLabel],
-  popupTemplate: Marker.popupTemplate
+  popupTemplate: Marker.popupTemplate,
 };

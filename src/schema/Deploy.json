@@ -1,20 +1,20 @@
 {
-	"deployId": "2",
-	"location": {
-		"type": "Point",
-		"coordinates": [7.658109535605021,45.96929103821426]
-	},
-	"reportingUserId": "3",
-	"additionalInfo": "Enemy",
-	"deployment": [
-		{
-			"amount": 2,
-			"tag": "Tank"
-		},
-		{
-			"amount": 1,
-			"tag": "RPG"
-		}
-	],
-	"deployType": "Enemy"
+  "deployId": "2",
+  "location": {
+    "type": "Point",
+    "coordinates": [7.658109535605021, 45.96929103821426]
+  },
+  "reportingUserId": "3",
+  "additionalInfo": "Enemy",
+  "deployment": [
+    {
+      "amount": 2,
+      "tag": "Tank"
+    },
+    {
+      "amount": 1,
+      "tag": "RPG"
+    }
+  ],
+  "deployType": "Enemy"
 }

@@ -4,24 +4,24 @@ const Marker = {
     color: [255, 0, 0],
     outline: {
       color: [255, 255, 255],
-      width: 2
-    }
+      width: 2,
+    },
   },
   Friend: {
     type: "simple-marker",
     color: [0, 255, 128],
     outline: {
       color: [255, 255, 255],
-      width: 2
-    }
+      width: 2,
+    },
   },
   friendly: {
     type: "simple-marker",
     color: [0, 255, 128],
     outline: {
       color: [255, 255, 255],
-      width: 2
-    }
+      width: 2,
+    },
   },
   amountLabel: {
     symbol: {
@@ -32,13 +32,13 @@ const Marker = {
       text: "You are here",
       font: {
         size: 13,
-        family: "Josefin Slab"
-      }
+        family: "Josefin Slab",
+      },
     },
     labelPlacement: "center-right",
     labelExpressionInfo: {
-      expression: "$feature.totalAmount"
-    }
+      expression: "$feature.totalAmount",
+    },
   },
   FriendlyMarker: {
     value: "Friendly",
@@ -49,12 +49,16 @@ const Marker = {
           type: "icon",
           anchor: "center",
           resource: {
-            href: "https://i.imgur.com/qT34iLD.png"
+            href: "https://i.imgur.com/qT34iLD.png",
           },
-          size: 36
-        }
-      ]
-    }
+          size: 36,
+        },
+      ],
+      styleOrigin: {
+        styleName: "EsriRecreationStyle",
+        name: "Slide",
+      },
+    },
   },
   EnemyMarker: {
     value: "Enemy",
@@ -67,12 +71,12 @@ const Marker = {
           width: 100,
           height: 100,
           resource: {
-            href: "https://i.imgur.com/JmcioEL.png"
+            href: "https://i.imgur.com/JmcioEL.png",
           },
-          size: 36
-        }
-      ]
-    }
+          size: 36,
+        },
+      ],
+    },
   },
   meMarker: {
     value: "me",
@@ -86,12 +90,12 @@ const Marker = {
           height: 60,
           resource: {
             // href: 'https://i.imgur.com/NowMtcF.png'
-            href: "https://i.imgur.com/lb9cyRR.png"
+            href: "https://i.imgur.com/lb9cyRR.png",
           },
-          size: 32
-        }
-      ]
-    }
+          size: 32,
+        },
+      ],
+    },
   },
   popupTemplate: {
     title: "{deployType}",
@@ -101,28 +105,28 @@ const Marker = {
         fieldInfos: [
           {
             fieldName: "deployId",
-            label: "Deploy Id"
+            label: "Deploy Id",
           },
           {
             fieldName: "additionalInfo",
-            label: "Description"
+            label: "Description",
           },
           {
             fieldName: "reportingUserId",
-            label: "Reporting User"
-          }
-        ]
-      }
-    ]
+            label: "Reporting User",
+          },
+        ],
+      },
+    ],
   },
   fillSymbol: {
     type: "simple-fill",
     color: [255, 0, 0, 0.4],
     outline: {
       color: [255, 255, 255, 0.0],
-      width: 0
-    }
-  }
+      width: 0,
+    },
+  },
 };
 
 export { Marker };
