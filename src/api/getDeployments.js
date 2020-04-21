@@ -1,10 +1,8 @@
-import axios from "axios";
+import axios from 'axios';
 
 export async function getDeployments() {
-  const { data: deployments } = await axios.get("http://localhost:8080/deploy");
-  deployments.forEach(
-    (deploy) => (deploy.totalAmount = getTotalAmount(deploy))
-  );
+  const { data: deployments } = await axios.get('http://localhost:8080/deploy');
+  deployments.forEach((deploy) => (deploy.totalAmount = getTotalAmount(deploy)));
   return deployments;
 }
 
