@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import socketIOClient from 'socket.io-client';
 import { loadModules } from 'esri-loader';
 import { LineOfSight } from './LineOfSight';
 import { Viewshed } from './Viewshed';
@@ -13,11 +14,14 @@ export class MapSceneView extends React.Component {
     super(props);
     this.mapRef = React.createRef();
     this.esriModules = {};
+    this.socketio = socketIOClient('http://localhost:8080');
 
     this.setUserMarkerPosition = this.setUserMarkerPosition.bind(this);
     this.addLayer = this.addLayer.bind(this);
     this.createLayer = this.createLayer.bind(this);
     this.renderEsriComponent = this.renderEsriComponent.bind(this);
+    this.createDeployGraphics = this.createDeployGraphics.bind(this);
+    this.createObjectGraphics = this.createObjectGraphics.bind(this);
   }
 
   async componentDidMount() {
@@ -35,45 +39,15 @@ export class MapSceneView extends React.Component {
         });
 
         const [deployments, objects] = await Promise.all([getDeployments(), getGeoObjects()]);
-        objects[0].objectType = 'Building';
-        objects[1].objectType = 'Building';
-
         this.setUserMarkerPosition(deployments, 3);
-        const deployGraphics = createDeployGraphics(deployments);
-        const objectGraphics = createObjectGraphics(objects);
-
+        const deployGraphics = this.createDeployGraphics(deployments);
+        const objectGraphics = this.createObjectGraphics(objects);
         const deployLayer = this.createLayer(deployLayerOpt, deployGraphics);
         const objectLayer = this.createLayer(objectLayerOpt, objectGraphics);
         this.addLayer([deployLayer, objectLayer]);
-        this.renderEsriComponent(LineOfSight, { deployments }, 'bottom-right');
+        this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
+        this.renderEsriComponent(Viewshed, { deployments, socketio: this.socketio }, 'bottom-right');
         this.renderEsriComponent(ObjectEditor, {}, 'top-right');
-
-        function createDeployGraphics(items) {
-          return items.map((item) => {
-            return new Graphic({
-              geometry: {
-                type: 'point',
-                latitude: item.location.coordinates[1],
-                longitude: item.location.coordinates[0],
-              },
-              attributes: { ...item },
-            });
-          });
-        }
-
-        function createObjectGraphics(items) {
-          return items.map((item) => {
-            return new Graphic({
-              geometry: {
-                type: 'polygon',
-                rings: [item.location.coordinates],
-              },
-              attributes: {
-                ...item,
-              },
-            });
-          });
-        }
       })
       .catch((e) => console.log(e));
   }
@@ -85,9 +59,36 @@ export class MapSceneView extends React.Component {
     }
   }
 
+  createDeployGraphics(items) {
+    return items.map((item) => {
+      return new this.esriModules.Graphic({
+        geometry: {
+          type: 'point',
+          latitude: item.location.coordinates[1],
+          longitude: item.location.coordinates[0],
+        },
+        attributes: { ...item },
+      });
+    });
+  }
+
+  createObjectGraphics(items) {
+    return items.map((item) => {
+      return new this.esriModules.Graphic({
+        geometry: {
+          type: 'polygon',
+          rings: [item.location.coordinates],
+        },
+        attributes: {
+          ...item,
+        },
+      });
+    });
+  }
+
   setUserMarkerPosition(deployments, id) {
     deployments.forEach((deploy) => {
-      if (deploy.deployId == id) deploy.deployType = 'User';
+      if (deploy.deployId === `${id}`) deploy.deployType = 'User';
     });
   }
 
@@ -99,9 +100,13 @@ export class MapSceneView extends React.Component {
   addLayer(layers = []) {
     layers.forEach((layer) => {
       this.view.map.add(layer);
-      layer.on('apply-edits', (e) => {
-        console.log(e);
-      });
+      layer.on('apply-edits', (e) => {});
+    });
+  }
+
+  getLayer(layer = '') {
+    return this.props.view.map.allLayers.find(function (layer) {
+      return layer.title === layer;
     });
   }
 

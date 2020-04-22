@@ -1,4 +1,4 @@
-import { deployMarkers } from '../markers/deploy'
+import { deployMarkers } from '../markers/deploy';
 
 export const deployLayerOpt = {
   title: 'deployments',
@@ -19,7 +19,7 @@ export const deployLayerOpt = {
     {
       name: 'totalAmount',
       alias: 'AMOUNT',
-      type: 'string',
+      type: 'integer',
     },
     {
       name: 'deployId',
@@ -39,4 +39,4 @@ export const deployLayerOpt = {
   },
   labelingInfo: [deployMarkers.amountLabel],
   popupTemplate: deployMarkers.popupTemplate,
-}
+};
