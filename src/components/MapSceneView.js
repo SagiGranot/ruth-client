@@ -105,7 +105,7 @@ export class MapSceneView extends React.Component {
   }
 
   getLayer(layer = '') {
-    return this.props.view.map.allLayers.find(function (layer) {
+    return this.props.view.map.allLayers.find((layer) => {
       return layer.title === layer;
     });
   }
