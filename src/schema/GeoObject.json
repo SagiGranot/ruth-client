@@ -1,0 +1,11 @@
+{
+  "objectId": "String",
+  "location": {
+    "type": { "type": "String" },
+    "coordinates": [],
+    "elevation": "3000"
+  },
+  "height": "Number",
+  "additionalInfo": "String",
+  "tag": ["String"]
+}

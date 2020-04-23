@@ -1,147 +1,163 @@
-import React, { Component } from "react";
-import { loadModules } from "esri-loader";
-import socketIOClient from "socket.io-client";
-const clone = require("rfdc")();
-const Deploy = require("../schema/Deploy.json");
+import { Component } from 'react';
+import { loadModules } from 'esri-loader';
+import { viewshedMarker } from '../markers/viewshed';
 
+const gpUrl =
+  'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed';
 export class Viewshed extends Component {
   constructor() {
     super();
-    this.socket = socketIOClient("http://localhost:8080");
+    this.esriModule = {};
+    this.featureSet = {};
+    this.vsDistance = {};
+    this.deployLayer = {};
+    this.graphicsLayer = {};
+    this.gp = {};
+
+    this.createGraphicContainer = this.createGraphicContainer.bind(this);
+    this.queryUnMoveEnemies = this.queryUnMoveEnemies.bind(this);
+    this.queryEnemyById = this.queryEnemyById.bind(this);
+    this.queryEnemies = this.queryEnemies.bind(this);
+    // this.computeViewshed = this.computeViewshed.bind(this);
     this.sendLocation = this.sendLocation.bind(this);
+    this.updateDeploy = this.updateDeploy.bind(this);
+    this.drawViewshed = this.drawViewshed.bind(this);
+    this.updateViewshed = this.updateViewshed.bind(this);
   }
 
   componentDidMount() {
     loadModules(
       [
-        "esri/geometry/Point",
-        "esri/Graphic",
-        "esri/layers/GraphicsLayer",
-        "esri/tasks/Geoprocessor",
-        "esri/tasks/support/LinearUnit",
-        "esri/tasks/support/FeatureSet"
+        'esri/geometry/Point',
+        'esri/Graphic',
+        'esri/layers/GraphicsLayer',
+        'esri/tasks/Geoprocessor',
+        'esri/tasks/support/LinearUnit',
+        'esri/tasks/support/FeatureSet',
       ],
       { css: true }
-    ).then(
-      ([
-        Point,
-        Graphic,
-        GraphicsLayer,
-        Geoprocessor,
-        LinearUnit,
-        FeatureSet
-      ]) => {
-        var featureLayer = this.props.view.map.allLayers.find(function(layer) {
-          return layer.title === "deployments";
-        });
+    ).then(async ([Point, Graphic, GraphicsLayer, Geoprocessor, LinearUnit, FeatureSet]) => {
+      this.esriModules = { Point, Graphic, GraphicsLayer, Geoprocessor, LinearUnit, FeatureSet };
 
-        var gpUrl =
-          "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed";
+      this.deployLayer = this.props.view.map.allLayers.find((layer) => layer.title === 'deployments');
 
-        var fillSymbol = {
-          type: "simple-fill",
-          color: [255, 0, 0, 0.4],
-          outline: {
-            color: [255, 255, 255, 0.0],
-            width: 0
-          }
-        };
+      this.graphicsLayer = new GraphicsLayer();
+      this.props.view.map.add(this.graphicsLayer);
 
-        var graphicsLayer = new GraphicsLayer();
-        this.props.view.map.add(graphicsLayer);
+      this.gp = new Geoprocessor(gpUrl);
+      this.gp.outSpatialReference = {
+        wkid: 102100,
+      };
 
-        var gp = new Geoprocessor(gpUrl);
-        gp.outSpatialReference = {
-          wkid: 102100
-        };
+      const { features: enemyDeploys } = await this.queryEnemies();
+      const inputGraphicContainer = this.createGraphicContainer(enemyDeploys);
 
-        function computeViewshed(items) {
-          graphicsLayer.removeAll();
+      var featureSet = new this.esriModules.FeatureSet();
+      featureSet.features = inputGraphicContainer;
 
-          featureLayer
-            .queryFeatures({
-              where: "deployType = 'Enemy'",
-              outFields: ["*"],
-              returnGeometry: true
-            })
-            .then(function(results) {
-              const inputGraphicContainer = results.features.map(i => {
-                let point = new Point({
-                  latitude: i.geometry.latitude,
-                  longitude: i.geometry.longitude
-                });
+      var vsDistance = new this.esriModules.LinearUnit();
+      vsDistance.distance = 10;
+      vsDistance.units = 'kilometers';
 
-                return new Graphic({
-                  geometry: point
-                });
-              });
+      var params = {
+        Input_Observation_Point: featureSet,
+        Viewshed_Distance: vsDistance,
+      };
 
-              var featureSet = new FeatureSet();
-              featureSet.features = inputGraphicContainer;
+      const result = await this.gp.execute(params);
+      this.drawViewshed(result);
+      this.props.socketio.on('SEND_LOCATION', this.updateDeploy);
+    });
+  }
 
-              var vsDistance = new LinearUnit();
-              vsDistance.distance = 10;
-              vsDistance.units = "kilometers";
+  async queryEnemies() {
+    const res = await this.deployLayer.queryFeatures({
+      where: "deployType = 'Enemy'",
+      outFields: ['*'],
+      returnGeometry: true,
+    });
+    return res;
+  }
 
-              var params = {
-                Input_Observation_Point: featureSet,
-                Viewshed_Distance: vsDistance
-              };
+  async queryUnMoveEnemies(deployId) {
+    const res = await this.deployLayer.queryFeatures({
+      where: `deployType = 'Enemy' AND deployId <> '${deployId}'`,
+      outFields: ['*'],
+      returnGeometry: true,
+    });
+    return res;
+  }
 
-              gp.execute(params).then(drawResultData);
-            });
-        }
+  async queryEnemyById(enemyId) {
+    const res = await this.deployLayer.queryFeatures({
+      where: `deployId = '${enemyId}'`,
+      outFields: ['*'],
+      returnGeometry: true,
+    });
+    return res;
+  }
 
-        function drawResultData(result) {
-          var resultFeatures = result.results[0].value.features;
+  async updateDeploy(deploy) {
+    try {
+      const deployId = deploy.deployId;
+      let deployToUpdate = await this.queryEnemyById(deployId);
+      deployToUpdate = deployToUpdate.features[0];
+      deployToUpdate.geometry['latitude'] = deploy.location.coordinates[1];
+      deployToUpdate.geometry['longitude'] = deploy.location.coordinates[0];
+      deployToUpdate.geometry['z'] = deploy.location.elevation;
+      const edits = { updateFeatures: [deployToUpdate] };
 
-          var viewshedGraphics = resultFeatures.map(function(feature) {
-            feature.symbol = fillSymbol;
-            return feature;
-          });
-
-          graphicsLayer.addMany(viewshedGraphics);
-        }
-
-        computeViewshed();
-
-        function selectFeature(deploy) {
-          console.log(deploy);
-          const deployId = deploy.deployId;
-          const queryById = deployId ? `='${deployId}'` : null;
-          featureLayer
-            .queryFeatures({
-              where: "deployId" + queryById,
-              outFields: ["*"],
-              returnGeometry: true
-            })
-            .then(function(results) {
-              let editFeature = results.features[0];
-              editFeature.geometry["latitude"] = deploy.location.coordinates[1];
-              editFeature.geometry["longitude"] =
-                deploy.location.coordinates[0];
-              editFeature.geometry["z"] = deploy.location.elevation;
-
-              const edits = {
-                updateFeatures: [editFeature]
-              };
-
-              featureLayer
-                .applyEdits(edits)
-                .then(function(editsResult) {
-                  if (deploy.deployType === "Enemy") {
-                    computeViewshed();
-                  }
-                })
-                .catch(function(error) {
-                  console.log("error = ", error);
-                });
-            });
-        }
-
-        this.socket.on("SEND_LOCATION", selectFeature);
+      if (deploy.deployType === 'Enemy') {
+        const { features: enemyDeploys } = await this.queryUnMoveEnemies(deployId);
+        const inputGraphicContainer = this.createGraphicContainer([...enemyDeploys, deployToUpdate]);
+        await this.updateViewshed(inputGraphicContainer);
       }
-    );
+      await this.deployLayer.applyEdits(edits);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  createGraphicContainer(items) {
+    const graphics = items.map((i) => {
+      let point = new this.esriModules.Point({
+        latitude: i.geometry.latitude,
+        longitude: i.geometry.longitude,
+      });
+
+      return new this.esriModules.Graphic({
+        geometry: point,
+        attributes: { deployId: i.attributes.deployId },
+      });
+    });
+    return graphics;
+  }
+
+  async updateViewshed(inputGraphicContainer) {
+    const featureSet = new this.esriModules.FeatureSet();
+    featureSet.features = inputGraphicContainer;
+
+    const vsDistance = new this.esriModules.LinearUnit();
+    vsDistance.distance = 10;
+    vsDistance.units = 'kilometers';
+
+    var params = {
+      Input_Observation_Point: featureSet,
+      Viewshed_Distance: vsDistance,
+    };
+
+    const result = await this.gp.execute(params);
+    this.drawViewshed(result);
+  }
+
+  drawViewshed(items) {
+    const features = items.results[0].value.features;
+    const viewshedGraphics = features.map((feature) => {
+      feature.symbol = viewshedMarker;
+      return feature;
+    });
+    this.graphicsLayer.removeAll(); //remove prev viewshed from map
+    this.graphicsLayer.addMany(viewshedGraphics);
   }
 
   sendLocation(event) {
