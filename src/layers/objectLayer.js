@@ -36,7 +36,7 @@ export const objectLayerOpt = {
         type: 'size',
         axis: 'height', // specify which axis to apply the data values to
         field: 'height',
-        valueUnit: 'feet',
+        valueUnit: 'meters',
       },
       {
         type: 'rotation',

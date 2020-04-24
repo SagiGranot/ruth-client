@@ -27,9 +27,9 @@ export class LineOfSight extends Component {
 
       this.props.view.on('click', this.sendLocation);
       viewModel.observer = new Point({
-        latitude: this.props.deployments[4].location.coordinates[1],
-        longitude: this.props.deployments[4].location.coordinates[0],
-        z: this.props.deployments[4].location.elevation,
+        latitude: this.props.deployments[3].location.coordinates[1],
+        longitude: this.props.deployments[3].location.coordinates[0],
+        z: this.props.deployments[3].location.elevation,
       });
 
       this.props.deployments.forEach((target) => {
