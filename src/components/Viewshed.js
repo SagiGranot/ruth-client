@@ -1,8 +1,9 @@
 import { Component } from 'react';
 import { loadModules } from 'esri-loader';
 import { point, polygon } from '@turf/helpers';
-import calcCircle from '@turf/circle';
-import isPointInsidePolygin from '@turf/boolean-point-in-polygon';
+import circle from '@turf/circle';
+import uniqBy from 'lodash.uniqby';
+import isPointInsidePolygon from '@turf/boolean-point-in-polygon';
 import { viewshedMarker } from '../markers/viewshed';
 import { circleMarker } from '../markers/circle';
 
@@ -17,19 +18,20 @@ export class Viewshed extends Component {
     this.deployLayer = {};
     this.graphicsLayer = {};
     this.gp = {};
+    this.currUserPos = null;
     this.userRadius = 3;
 
-    this.createGraphicContainer = this.createGraphicContainer.bind(this);
-    this.queryUnMoveEnemies = this.queryUnMoveEnemies.bind(this);
-    this.queryEnemyById = this.queryEnemyById.bind(this);
-    this.getUserCircle = this.getUserCircle.bind(this);
     this.createUserCircleGraphic = this.createUserCircleGraphic.bind(this);
+    this.getViewshedInsideCircle = this.getViewshedInsideCircle.bind(this);
+    this.createGraphicContainer = this.createGraphicContainer.bind(this);
+    this.createFeatureSet = this.createFeatureSet.bind(this);
+    this.updateDeploys = this.updateDeploys.bind(this);
+    this.getUserCircle = this.getUserCircle.bind(this);
+    this.calcViewshed = this.calcViewshed.bind(this);
     this.queryEnemies = this.queryEnemies.bind(this);
-    // this.computeViewshed = this.computeViewshed.bind(this);
     this.sendLocation = this.sendLocation.bind(this);
-    this.updateDeploy = this.updateDeploy.bind(this);
     this.drawViewshed = this.drawViewshed.bind(this);
-    this.updateViewshed = this.updateViewshed.bind(this);
+    this.queryById = this.queryById.bind(this);
   }
 
   componentDidMount() {
@@ -45,11 +47,10 @@ export class Viewshed extends Component {
       { css: true }
     ).then(async ([Point, Graphic, GraphicsLayer, Geoprocessor, LinearUnit, FeatureSet]) => {
       this.esriModules = { Point, Graphic, GraphicsLayer, Geoprocessor, LinearUnit, FeatureSet };
-
       this.deployLayer = this.props.view.map.allLayers.find((layer) => layer.title === 'deployments');
-
       this.graphicsLayer = new GraphicsLayer();
       this.props.view.map.add(this.graphicsLayer);
+      this.props.socketio.on('SEND_LOCATION', this.updateDeploys);
 
       this.gp = new Geoprocessor(gpUrl);
       this.gp.outSpatialReference = {
@@ -57,22 +58,8 @@ export class Viewshed extends Component {
       };
 
       const { features: enemyDeploys } = await this.queryEnemies();
-      const inputGraphicContainer = this.createGraphicContainer(enemyDeploys);
-
-      var featureSet = new this.esriModules.FeatureSet();
-      featureSet.features = inputGraphicContainer;
-
-      var vsDistance = new this.esriModules.LinearUnit();
-      vsDistance.distance = 10;
-      vsDistance.units = 'kilometers';
-
-      var params = {
-        Input_Observation_Point: featureSet,
-        Viewshed_Distance: vsDistance,
-      };
-      const result = await this.gp.execute(params);
+      const result = await this.calcViewshed(enemyDeploys);
       await this.drawViewshed(result);
-      this.props.socketio.on('SEND_LOCATION', this.updateDeploy);
     });
   }
 
@@ -85,18 +72,9 @@ export class Viewshed extends Component {
     return res;
   }
 
-  async queryUnMoveEnemies(deployId) {
+  async queryById(deployId) {
     const res = await this.deployLayer.queryFeatures({
-      where: `deployType = 'Enemy' AND deployId <> '${deployId}'`,
-      outFields: ['*'],
-      returnGeometry: true,
-    });
-    return res;
-  }
-
-  async queryEnemyById(enemyId) {
-    const res = await this.deployLayer.queryFeatures({
-      where: `deployId = '${enemyId}'`,
+      where: `deployId = '${deployId}'`,
       outFields: ['*'],
       returnGeometry: true,
     });
@@ -112,21 +90,35 @@ export class Viewshed extends Component {
     return res;
   }
 
-  async updateDeploy(deploy) {
-    try {
-      const deployId = deploy.deployId;
-      let deployToUpdate = await this.queryEnemyById(deployId);
-      deployToUpdate = deployToUpdate.features[0];
-      deployToUpdate.geometry['latitude'] = deploy.location.coordinates[1];
-      deployToUpdate.geometry['longitude'] = deploy.location.coordinates[0];
-      deployToUpdate.geometry['z'] = deploy.location.elevation;
-      const edits = { updateFeatures: [deployToUpdate] };
+  async updateDeployPosition(deploy) {
+    const deployId = deploy.deployId;
+    if (deployId === '3') {
+      this.currUserPos = { longitude: deploy.location.coordinates[0], latitude: deploy.location.coordinates[1] };
+    }
 
-      if (deploy.deployType === 'Enemy') {
-        const { features: enemyDeploys } = await this.queryUnMoveEnemies(deployId);
-        const inputGraphicContainer = this.createGraphicContainer([...enemyDeploys, deployToUpdate]);
-        await this.updateViewshed(inputGraphicContainer);
-      }
+    let deployToUpdate = await this.queryById(deployId);
+    deployToUpdate = deployToUpdate.features[0];
+    deployToUpdate.geometry['latitude'] = deploy.location.coordinates[1];
+    deployToUpdate.geometry['longitude'] = deploy.location.coordinates[0];
+    deployToUpdate.geometry['z'] = deploy.location.elevation;
+    return deployToUpdate;
+  }
+
+  async updateDeploys(deploys) {
+    try {
+      const deploysToUpdate = await Promise.all(
+        deploys.map(async (deploy) => {
+          const deployUpdate = await this.updateDeployPosition(deploy);
+          return deployUpdate;
+        })
+      );
+
+      const edits = { updateFeatures: deploysToUpdate };
+      const { features: enemyDeploys } = await this.queryEnemies();
+      const enemiesToUpdates = deploysToUpdate.filter((deploy) => deploy.attributes.deployType === 'Enemy');
+      const enemiesSet = uniqBy([...enemiesToUpdates, ...enemyDeploys], 'attributes.deployId');
+      const result = await this.calcViewshed(enemiesSet);
+      await this.drawViewshed(result);
       await this.deployLayer.applyEdits(edits);
     } catch (error) {
       console.log(error);
@@ -148,54 +140,25 @@ export class Viewshed extends Component {
     return graphics;
   }
 
-  async updateViewshed(inputGraphicContainer) {
-    const featureSet = new this.esriModules.FeatureSet();
-    featureSet.features = inputGraphicContainer;
-
-    const vsDistance = new this.esriModules.LinearUnit();
-    vsDistance.distance = 10;
-    vsDistance.units = 'kilometers';
-
-    var params = {
-      Input_Observation_Point: featureSet,
-      Viewshed_Distance: vsDistance,
-    };
-
-    const result = await this.gp.execute(params);
-    await this.drawViewshed(result);
-  }
-
   async drawViewshed(items) {
+    const viewshedPoints = items[0].value.features;
     const userCircle = await this.getUserCircle();
-    const circlePolygon = polygon(userCircle.geometry.coordinates);
-
-    const features = items.results[0].value.features;
-    const viewshedGraphics = features.filter((feature) => {
-      const lon = feature.geometry.centroid.longitude;
-      const lat = feature.geometry.centroid.latitude;
-      const viewshedPoint = point([lon, lat]);
-      let result = isPointInsidePolygin(viewshedPoint, circlePolygon);
-      if (result) {
-        feature.symbol = viewshedMarker;
-        return feature;
-      }
-      return false;
-    });
+    const userCirclePolygon = polygon(userCircle.geometry.coordinates);
+    const viewshedInsideCircle = this.getViewshedInsideCircle(viewshedPoints, userCirclePolygon);
     this.graphicsLayer.removeAll(); //remove prev viewshed from map
-    const userCircleGraphic = await this.createUserCircleGraphic();
+    const userCircleGraphic = await this.createUserCircleGraphic(userCircle);
     this.graphicsLayer.add(userCircleGraphic);
-    this.graphicsLayer.addMany(viewshedGraphics);
+    this.graphicsLayer.addMany(viewshedInsideCircle);
   }
 
   async getUserCircle() {
     const user = await this.queryCurrentUser();
-    const { longitude, latitude } = user.features[0].geometry;
+    const { longitude, latitude } = this.currUserPos || user.features[0].geometry;
     const center = [longitude, latitude];
-    return calcCircle(center, this.userRadius);
+    return circle(center, this.userRadius);
   }
 
-  async createUserCircleGraphic() {
-    const circle = await this.getUserCircle();
+  async createUserCircleGraphic(circle) {
     const circleGraphic = new this.esriModules.Graphic({
       geometry: {
         type: 'polygon',
@@ -204,6 +167,41 @@ export class Viewshed extends Component {
       symbol: circleMarker,
     });
     return circleGraphic;
+  }
+
+  createFeatureSet(graphics) {
+    var featureSet = new this.esriModules.FeatureSet();
+    featureSet.features = graphics;
+
+    var vsDistance = new this.esriModules.LinearUnit();
+    vsDistance.distance = 10;
+    vsDistance.units = 'kilometers';
+
+    return {
+      Input_Observation_Point: featureSet,
+      Viewshed_Distance: vsDistance,
+    };
+  }
+
+  getViewshedInsideCircle(viewshedPoints, userCirclePolygon) {
+    return viewshedPoints.filter((_point) => {
+      const lon = _point.geometry.centroid.longitude;
+      const lat = _point.geometry.centroid.latitude;
+      const viewshedPoint = point([lon, lat]);
+      let isInside = isPointInsidePolygon(viewshedPoint, userCirclePolygon);
+      if (isInside) {
+        _point.symbol = viewshedMarker;
+        return _point;
+      }
+      return false;
+    });
+  }
+
+  async calcViewshed(features) {
+    const inputGraphicContainer = this.createGraphicContainer(features);
+    const featureSet = this.createFeatureSet(inputGraphicContainer);
+    const { results } = await this.gp.execute(featureSet);
+    return results;
   }
 
   sendLocation(event) {

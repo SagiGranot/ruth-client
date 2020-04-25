@@ -32,10 +32,7 @@ export class MapSceneView extends React.Component {
         this.view = new SceneView({
           container: this.mapRef.current,
           map: map,
-          camera: {
-            position: [35.587, 30.929, 2184],
-            tilt: 80,
-          },
+          camera: { position: [35.5954, 30.993, 3000], tilt: 46, fov: 100 },
         });
 
         const [deployments, objects] = await Promise.all([getDeployments(), getGeoObjects()]);
@@ -45,7 +42,7 @@ export class MapSceneView extends React.Component {
         const deployLayer = this.createLayer(deployLayerOpt, deployGraphics);
         const objectLayer = this.createLayer(objectLayerOpt, objectGraphics);
         this.addLayer([deployLayer, objectLayer]);
-        this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
+        // this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
         this.renderEsriComponent(Viewshed, { deployments, socketio: this.socketio }, 'bottom-right');
         this.renderEsriComponent(ObjectEditor, {}, 'top-right');
       })

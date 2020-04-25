@@ -17,7 +17,7 @@ export const deployLayerOpt = {
       type: 'string',
     },
     {
-      name: 'totalAmount',
+      name: 'amount',
       alias: 'AMOUNT',
       type: 'integer',
     },

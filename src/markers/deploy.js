@@ -91,7 +91,7 @@ const deployMarkers = {
     },
     labelPlacement: 'center-right',
     labelExpressionInfo: {
-      expression: '$feature.totalAmount',
+      expression: '$feature.amount',
     },
   },
   fillSymbol: {
@@ -102,6 +102,6 @@ const deployMarkers = {
       width: 0,
     },
   },
-}
+};
 
-export { deployMarkers }
+export { deployMarkers };
