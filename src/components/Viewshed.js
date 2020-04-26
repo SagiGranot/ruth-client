@@ -52,6 +52,8 @@ export class Viewshed extends Component {
       this.props.view.map.add(this.graphicsLayer);
       this.props.socketio.on('SEND_LOCATION', this.updateDeploys);
 
+      this.props.view.on('click', this.sendLocation);
+
       this.gp = new Geoprocessor(gpUrl);
       this.gp.outSpatialReference = {
         wkid: 102100,
@@ -205,6 +207,7 @@ export class Viewshed extends Component {
   }
 
   sendLocation(event) {
+    console.log(event.mapPoint);
     // this.props.view.hitTest(event.screenPoint).then( response => {
     //   var graphics = response.results;
     //   if (!graphics.length) {
