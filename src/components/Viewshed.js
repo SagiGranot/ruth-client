@@ -143,14 +143,18 @@ export class Viewshed extends Component {
   }
 
   async drawViewshed(items) {
-    const viewshedPoints = items[0].value.features;
     const userCircle = await this.getUserCircle();
-    const userCirclePolygon = polygon(userCircle.geometry.coordinates);
-    const viewshedInsideCircle = this.getViewshedInsideCircle(viewshedPoints, userCirclePolygon);
-    this.graphicsLayer.removeAll(); //remove prev viewshed from map
     const userCircleGraphic = await this.createUserCircleGraphic(userCircle);
+    if (items) {
+      const viewshedPoints = items[0].value.features;
+      const userCirclePolygon = polygon(userCircle.geometry.coordinates);
+      const viewshedInsideCircle = this.getViewshedInsideCircle(viewshedPoints, userCirclePolygon);
+      this.graphicsLayer.removeAll(); //remove prev viewshed from map
+      this.graphicsLayer.addMany(viewshedInsideCircle);
+    } else {
+      this.graphicsLayer.removeAll(); //remove prev viewshed from map
+    }
     this.graphicsLayer.add(userCircleGraphic);
-    this.graphicsLayer.addMany(viewshedInsideCircle);
   }
 
   async getUserCircle() {
@@ -200,10 +204,15 @@ export class Viewshed extends Component {
   }
 
   async calcViewshed(features) {
-    const inputGraphicContainer = this.createGraphicContainer(features);
-    const featureSet = this.createFeatureSet(inputGraphicContainer);
-    const { results } = await this.gp.execute(featureSet);
-    return results;
+    try {
+      const inputGraphicContainer = this.createGraphicContainer(features);
+      const featureSet = this.createFeatureSet(inputGraphicContainer);
+      const { results } = await this.gp.execute(featureSet);
+      return results;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
   }
 
   sendLocation(event) {
