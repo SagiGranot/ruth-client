@@ -4,6 +4,7 @@ import socketIOClient from 'socket.io-client';
 import { loadModules } from 'esri-loader';
 import { LineOfSight } from './LineOfSight';
 import { Viewshed } from './Viewshed';
+import { DayLight } from './DayLight';
 import { deployLayerOpt } from '../layers/deployLayer';
 import { objectLayerOpt } from '../layers/objectLayer';
 import { ObjectEditor } from './ObjectEditor';
@@ -25,7 +26,9 @@ export class MapSceneView extends React.Component {
   }
 
   async componentDidMount() {
-    loadModules(['esri/Map', 'esri/views/SceneView', 'esri/layers/FeatureLayer', 'esri/Graphic'], { css: true })
+    loadModules(['esri/Map', 'esri/views/SceneView', 'esri/layers/FeatureLayer', 'esri/Graphic'], {
+      css: 'https://js.arcgis.com/4.15/esri/themes/dark/main.css',
+    })
       .then(async ([Map, SceneView, FeatureLayer, Graphic]) => {
         this.esriModules = { Map, SceneView, FeatureLayer, Graphic };
         const map = new Map({ basemap: 'topo-vector', ground: 'world-elevation' });
@@ -33,6 +36,10 @@ export class MapSceneView extends React.Component {
           container: this.mapRef.current,
           map: map,
           camera: { position: [35.5954, 30.993, 3000], tilt: 46, fov: 100 },
+          environment: {
+            atmosphere: { quality: 'low' },
+            lighting: { date: new Date(), directShadowsEnabled: false },
+          },
         });
 
         const [deployments, objects] = await Promise.all([getDeployments(), getGeoObjects()]);
@@ -41,10 +48,14 @@ export class MapSceneView extends React.Component {
         const objectGraphics = this.createObjectGraphics(objects);
         const deployLayer = this.createLayer(deployLayerOpt, deployGraphics);
         const objectLayer = this.createLayer(objectLayerOpt, objectGraphics);
-        this.addLayer([deployLayer, objectLayer]);
-        // this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
-        this.renderEsriComponent(Viewshed, { deployments, socketio: this.socketio }, 'bottom-right');
-        this.renderEsriComponent(ObjectEditor, {}, 'top-right');
+
+        this.view.when(() => {
+          this.addLayer([deployLayer, objectLayer]);
+          this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
+          this.renderEsriComponent(Viewshed, { deployments, socketio: this.socketio }, 'bottom-right');
+          this.renderEsriComponent(ObjectEditor, {}, 'top-right');
+          this.renderEsriComponent(DayLight, {}, 'bottom-right');
+        });
       })
       .catch((e) => console.log(e));
   }
@@ -74,7 +85,7 @@ export class MapSceneView extends React.Component {
       return new this.esriModules.Graphic({
         geometry: {
           type: 'polygon',
-          rings: [item.location.coordinates],
+          rings: [item.location.coordinates[0]],
         },
         attributes: {
           ...item,
@@ -110,11 +121,11 @@ export class MapSceneView extends React.Component {
   renderEsriComponent(component, props, position) {
     const Components = component;
     const elm = document.createElement('div');
-    this.view.ui.add(elm, position);
+    this.view.ui.add(elm);
     ReactDOM.render(<Components view={this.view} {...props} />, elm);
   }
 
   render() {
-    return <div className="webmap" ref={this.mapRef} />;
+    return <div className="webmap" ref={this.mapRef}></div>;
   }
 }
