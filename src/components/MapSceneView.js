@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import socketIOClient from 'socket.io-client';
 import { loadModules } from 'esri-loader';
 import { LineOfSight } from './LineOfSight';
 import { Viewshed } from './Viewshed';
@@ -15,7 +14,7 @@ export class MapSceneView extends React.Component {
     super(props);
     this.mapRef = React.createRef();
     this.esriModules = {};
-    this.socketio = socketIOClient('http://localhost:8080');
+    this.socketio = this.props.socketio;
 
     this.setUserMarkerPosition = this.setUserMarkerPosition.bind(this);
     this.addLayer = this.addLayer.bind(this);
@@ -53,8 +52,8 @@ export class MapSceneView extends React.Component {
           this.addLayer([deployLayer, objectLayer]);
           this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
           this.renderEsriComponent(Viewshed, { deployments, socketio: this.socketio }, 'bottom-right');
-          this.renderEsriComponent(ObjectEditor, {}, 'top-right');
-          this.renderEsriComponent(DayLight, {}, 'bottom-right');
+          this.renderEsriComponent(ObjectEditor);
+          this.renderEsriComponent(DayLight);
         });
       })
       .catch((e) => console.log(e));
@@ -118,7 +117,7 @@ export class MapSceneView extends React.Component {
     });
   }
 
-  renderEsriComponent(component, props, position) {
+  renderEsriComponent(component, props = {}) {
     const Components = component;
     const elm = document.createElement('div');
     this.view.ui.add(elm);
@@ -126,6 +125,6 @@ export class MapSceneView extends React.Component {
   }
 
   render() {
-    return <div className="webmap" ref={this.mapRef}></div>;
+    return <div className="webmap" ref={this.mapRef} />;
   }
 }

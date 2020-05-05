@@ -57,7 +57,7 @@ export class LineOfSight extends Component {
         expanded: false,
       });
 
-      this.props.view.ui.add(expand, 'bottom-right');
+      this.props.view.ui.add(expand, 'top-right');
       this.props.socketio.on('SEND_LOCATION', updateTargets);
 
       function updateTargets(item) {
