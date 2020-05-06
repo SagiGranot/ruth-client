@@ -60,8 +60,8 @@ export class Viewshed extends Component {
       };
 
       const { features: enemyDeploys } = await this.queryEnemies();
-      const result = await this.calcViewshed(enemyDeploys);
-      await this.drawViewshed(result);
+      // const result = await this.calcViewshed(enemyDeploys);
+      // await this.drawViewshed(result);
     });
   }
 

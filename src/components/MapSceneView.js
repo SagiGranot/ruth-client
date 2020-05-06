@@ -1,20 +1,20 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import socketIOClient from 'socket.io-client';
-import { loadModules } from 'esri-loader';
-import { LineOfSight } from './LineOfSight';
-import { Viewshed } from './Viewshed';
-import { deployLayerOpt } from '../layers/deployLayer';
-import { objectLayerOpt } from '../layers/objectLayer';
-import { ObjectEditor } from './ObjectEditor';
-import { getDeployments } from '../api/getDeployments';
-import { getGeoObjects } from '../api/getGeoObjects';
+import React from "react";
+import ReactDOM from "react-dom";
+import socketIOClient from "socket.io-client";
+import { loadModules } from "esri-loader";
+import { LineOfSight } from "./LineOfSight";
+import { Viewshed } from "./Viewshed";
+import { deployLayerOpt } from "../layers/deployLayer";
+import { objectLayerOpt } from "../layers/objectLayer";
+import { ObjectEditor } from "./ObjectEditor";
+import { getDeployments } from "../api/getDeployments";
+import { getGeoObjects } from "../api/getGeoObjects";
 export class MapSceneView extends React.Component {
   constructor(props) {
     super(props);
     this.mapRef = React.createRef();
     this.esriModules = {};
-    this.socketio = socketIOClient('http://localhost:8080');
+    this.socketio = socketIOClient("http://localhost:8080");
 
     this.setUserMarkerPosition = this.setUserMarkerPosition.bind(this);
     this.addLayer = this.addLayer.bind(this);
@@ -25,17 +25,31 @@ export class MapSceneView extends React.Component {
   }
 
   async componentDidMount() {
-    loadModules(['esri/Map', 'esri/views/SceneView', 'esri/layers/FeatureLayer', 'esri/Graphic'], { css: true })
+    loadModules(
+      [
+        "esri/Map",
+        "esri/views/SceneView",
+        "esri/layers/FeatureLayer",
+        "esri/Graphic",
+      ],
+      { css: true }
+    )
       .then(async ([Map, SceneView, FeatureLayer, Graphic]) => {
         this.esriModules = { Map, SceneView, FeatureLayer, Graphic };
-        const map = new Map({ basemap: 'topo-vector', ground: 'world-elevation' });
+        const map = new Map({
+          basemap: "topo-vector",
+          ground: "world-elevation",
+        });
         this.view = new SceneView({
           container: this.mapRef.current,
           map: map,
           camera: { position: [35.5954, 30.993, 3000], tilt: 46, fov: 100 },
         });
 
-        const [deployments, objects] = await Promise.all([getDeployments(), getGeoObjects()]);
+        const [deployments, objects] = await Promise.all([
+          getDeployments(),
+          getGeoObjects(),
+        ]);
         this.setUserMarkerPosition(deployments, 3);
         const deployGraphics = this.createDeployGraphics(deployments);
         const objectGraphics = this.createObjectGraphics(objects);
@@ -43,8 +57,12 @@ export class MapSceneView extends React.Component {
         const objectLayer = this.createLayer(objectLayerOpt, objectGraphics);
         this.addLayer([deployLayer, objectLayer]);
         // this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
-        this.renderEsriComponent(Viewshed, { deployments, socketio: this.socketio }, 'bottom-right');
-        this.renderEsriComponent(ObjectEditor, {}, 'top-right');
+        this.renderEsriComponent(
+          Viewshed,
+          { deployments, socketio: this.socketio },
+          "bottom-right"
+        );
+        this.renderEsriComponent(ObjectEditor, {}, "top-right");
       })
       .catch((e) => console.log(e));
   }
@@ -60,7 +78,7 @@ export class MapSceneView extends React.Component {
     return items.map((item) => {
       return new this.esriModules.Graphic({
         geometry: {
-          type: 'point',
+          type: "point",
           latitude: item.location.coordinates[1],
           longitude: item.location.coordinates[0],
         },
@@ -73,7 +91,7 @@ export class MapSceneView extends React.Component {
     return items.map((item) => {
       return new this.esriModules.Graphic({
         geometry: {
-          type: 'polygon',
+          type: "polygon",
           rings: [item.location.coordinates],
         },
         attributes: {
@@ -85,7 +103,7 @@ export class MapSceneView extends React.Component {
 
   setUserMarkerPosition(deployments, id) {
     deployments.forEach((deploy) => {
-      if (deploy.deployId === `${id}`) deploy.deployType = 'User';
+      if (deploy.deployId === `${id}`) deploy.tag = "User";
     });
   }
 
@@ -97,11 +115,11 @@ export class MapSceneView extends React.Component {
   addLayer(layers = []) {
     layers.forEach((layer) => {
       this.view.map.add(layer);
-      layer.on('apply-edits', (e) => {});
+      layer.on("apply-edits", (e) => {});
     });
   }
 
-  getLayer(layerTitle = '') {
+  getLayer(layerTitle = "") {
     return this.props.view.map.allLayers.find((layer) => {
       return layer.title === layerTitle;
     });
@@ -109,7 +127,7 @@ export class MapSceneView extends React.Component {
 
   renderEsriComponent(component, props, position) {
     const Components = component;
-    const elm = document.createElement('div');
+    const elm = document.createElement("div");
     this.view.ui.add(elm, position);
     ReactDOM.render(<Components view={this.view} {...props} />, elm);
   }
