@@ -7,8 +7,10 @@ import isPointInsidePolygon from '@turf/boolean-point-in-polygon';
 import { viewshedMarker } from '../markers/viewshed';
 import { circleMarker } from '../markers/circle';
 
+const USER_ID = 3;
 const gpUrl =
   'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed';
+
 export class Viewshed extends Component {
   constructor() {
     super();
@@ -44,20 +46,17 @@ export class Viewshed extends Component {
         'esri/tasks/support/LinearUnit',
         'esri/tasks/support/FeatureSet',
       ],
-      { css: true }
+      { css: false }
     ).then(async ([Point, Graphic, GraphicsLayer, Geoprocessor, LinearUnit, FeatureSet]) => {
       this.esriModules = { Point, Graphic, GraphicsLayer, Geoprocessor, LinearUnit, FeatureSet };
       this.deployLayer = this.props.view.map.allLayers.find((layer) => layer.title === 'deployments');
       this.graphicsLayer = new GraphicsLayer();
       this.props.view.map.add(this.graphicsLayer);
       this.props.socketio.on('SEND_LOCATION', this.updateDeploys);
-
       this.props.view.on('click', this.sendLocation);
 
       this.gp = new Geoprocessor(gpUrl);
-      this.gp.outSpatialReference = {
-        wkid: 102100,
-      };
+      this.gp.outSpatialReference = { wkid: 102100 };
 
       const { features: enemyDeploys } = await this.queryEnemies();
       // const result = await this.calcViewshed(enemyDeploys);
@@ -94,8 +93,11 @@ export class Viewshed extends Component {
 
   async updateDeployPosition(deploy) {
     const deployId = deploy.deployId;
-    if (deployId === '3') {
-      this.currUserPos = { longitude: deploy.location.coordinates[0], latitude: deploy.location.coordinates[1] };
+    if (deployId === USER_ID) {
+      this.currUserPos = {
+        longitude: deploy.location.coordinates[0],
+        latitude: deploy.location.coordinates[1],
+      };
     }
 
     let deployToUpdate = await this.queryById(deployId);
@@ -182,24 +184,20 @@ export class Viewshed extends Component {
     var vsDistance = new this.esriModules.LinearUnit();
     vsDistance.distance = 10;
     vsDistance.units = 'kilometers';
-
     return {
       Input_Observation_Point: featureSet,
       Viewshed_Distance: vsDistance,
     };
   }
 
-  getViewshedInsideCircle(viewshedPoints, userCirclePolygon) {
+  getViewshedInsideCircle(viewshedPoints = [], userCirclePolygon = {}) {
     return viewshedPoints.filter((_point) => {
       const lon = _point.geometry.centroid.longitude;
       const lat = _point.geometry.centroid.latitude;
       const viewshedPoint = point([lon, lat]);
-      let isInside = isPointInsidePolygon(viewshedPoint, userCirclePolygon);
-      if (isInside) {
-        _point.symbol = viewshedMarker;
-        return _point;
-      }
-      return false;
+      return isPointInsidePolygon(viewshedPoint, userCirclePolygon)
+        ? (_point.symbol = viewshedMarker)
+        : false;
     });
   }
 
@@ -215,20 +213,8 @@ export class Viewshed extends Component {
     }
   }
 
-  sendLocation(event) {
+  async sendLocation(event) {
     console.log(event.mapPoint);
-    // this.props.view.hitTest(event.screenPoint).then( response => {
-    //   var graphics = response.results;
-    //   if (!graphics.length) {
-    //     const deploy = clone(Deploy);
-    //     deploy.location.coordinates = [
-    //       event.mapPoint.longitude,
-    //       event.mapPoint.latitude
-    //     ];
-    //     deploy.location.elevation = event.mapPoint.z;
-    //     this.socket.emit('SEND_LOCATION', deploy);
-    //   }
-    // });
   }
 
   render() {

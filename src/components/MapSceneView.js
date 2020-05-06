@@ -1,20 +1,20 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import socketIOClient from "socket.io-client";
-import { loadModules } from "esri-loader";
-import { LineOfSight } from "./LineOfSight";
-import { Viewshed } from "./Viewshed";
-import { deployLayerOpt } from "../layers/deployLayer";
-import { objectLayerOpt } from "../layers/objectLayer";
-import { ObjectEditor } from "./ObjectEditor";
-import { getDeployments } from "../api/getDeployments";
-import { getGeoObjects } from "../api/getGeoObjects";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { loadModules } from 'esri-loader';
+import { LineOfSight } from './LineOfSight';
+import { Viewshed } from './Viewshed';
+import { DayLight } from './DayLight';
+import { deployLayerOpt } from '../layers/deployLayer';
+import { objectLayerOpt } from '../layers/objectLayer';
+import { ObjectEditor } from './ObjectEditor';
+import { getDeployments } from '../api/getDeployments';
+import { getGeoObjects } from '../api/getGeoObjects';
 export class MapSceneView extends React.Component {
   constructor(props) {
     super(props);
     this.mapRef = React.createRef();
     this.esriModules = {};
-    this.socketio = socketIOClient("http://localhost:8080");
+    this.socketio = this.props.socketio;
 
     this.setUserMarkerPosition = this.setUserMarkerPosition.bind(this);
     this.addLayer = this.addLayer.bind(this);
@@ -25,15 +25,9 @@ export class MapSceneView extends React.Component {
   }
 
   async componentDidMount() {
-    loadModules(
-      [
-        "esri/Map",
-        "esri/views/SceneView",
-        "esri/layers/FeatureLayer",
-        "esri/Graphic",
-      ],
-      { css: true }
-    )
+    loadModules(['esri/Map', 'esri/views/SceneView', 'esri/layers/FeatureLayer', 'esri/Graphic'], {
+      css: 'https://js.arcgis.com/4.15/esri/themes/dark/main.css',
+    })
       .then(async ([Map, SceneView, FeatureLayer, Graphic]) => {
         this.esriModules = { Map, SceneView, FeatureLayer, Graphic };
         const map = new Map({
@@ -44,6 +38,10 @@ export class MapSceneView extends React.Component {
           container: this.mapRef.current,
           map: map,
           camera: { position: [35.5954, 30.993, 3000], tilt: 46, fov: 100 },
+          environment: {
+            atmosphere: { quality: 'low' },
+            lighting: { date: new Date(), directShadowsEnabled: false },
+          },
         });
 
         const [deployments, objects] = await Promise.all([
@@ -55,14 +53,14 @@ export class MapSceneView extends React.Component {
         const objectGraphics = this.createObjectGraphics(objects);
         const deployLayer = this.createLayer(deployLayerOpt, deployGraphics);
         const objectLayer = this.createLayer(objectLayerOpt, objectGraphics);
-        this.addLayer([deployLayer, objectLayer]);
-        // this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
-        this.renderEsriComponent(
-          Viewshed,
-          { deployments, socketio: this.socketio },
-          "bottom-right"
-        );
-        this.renderEsriComponent(ObjectEditor, {}, "top-right");
+
+        this.view.when(() => {
+          this.addLayer([deployLayer, objectLayer]);
+          this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
+          this.renderEsriComponent(Viewshed, { deployments, socketio: this.socketio }, 'bottom-right');
+          this.renderEsriComponent(ObjectEditor);
+          this.renderEsriComponent(DayLight);
+        });
       })
       .catch((e) => console.log(e));
   }
@@ -91,8 +89,8 @@ export class MapSceneView extends React.Component {
     return items.map((item) => {
       return new this.esriModules.Graphic({
         geometry: {
-          type: "polygon",
-          rings: [item.location.coordinates],
+          type: 'polygon',
+          rings: [item.location.coordinates[0]],
         },
         attributes: {
           ...item,
@@ -125,10 +123,10 @@ export class MapSceneView extends React.Component {
     });
   }
 
-  renderEsriComponent(component, props, position) {
+  renderEsriComponent(component, props = {}) {
     const Components = component;
-    const elm = document.createElement("div");
-    this.view.ui.add(elm, position);
+    const elm = document.createElement('div');
+    this.view.ui.add(elm);
     ReactDOM.render(<Components view={this.view} {...props} />, elm);
   }
 

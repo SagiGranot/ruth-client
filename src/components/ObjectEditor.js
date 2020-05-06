@@ -3,15 +3,23 @@ import { loadModules } from 'esri-loader';
 
 export class ObjectEditor extends Component {
   componentDidMount() {
-    loadModules(['esri/widgets/Editor'], {
-      css: true,
-    }).then(([Editor]) => {
+    loadModules(['esri/widgets/Editor', 'esri/widgets/Expand'], {
+      css: false,
+    }).then(([Editor, Expand]) => {
       this.props.view.when(() => {
         // this.props.view.popup.autoOpenEnabled = false;
-        let editor = new Editor({
+        const editor = new Editor({
           view: this.props.view,
         });
-        this.props.view.ui.add(editor, 'top-right');
+
+        const expand = new Expand({
+          expandTooltip: 'Expand object editor widget',
+          view: this.props.view,
+          content: editor,
+          expanded: false,
+        });
+
+        this.props.view.ui.add(expand, 'top-right');
       });
     });
   }
