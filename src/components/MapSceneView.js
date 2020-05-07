@@ -30,7 +30,10 @@ export class MapSceneView extends React.Component {
     })
       .then(async ([Map, SceneView, FeatureLayer, Graphic]) => {
         this.esriModules = { Map, SceneView, FeatureLayer, Graphic };
-        const map = new Map({ basemap: 'topo-vector', ground: 'world-elevation' });
+        const map = new Map({
+          basemap: "topo-vector",
+          ground: "world-elevation",
+        });
         this.view = new SceneView({
           container: this.mapRef.current,
           map: map,
@@ -41,7 +44,10 @@ export class MapSceneView extends React.Component {
           },
         });
 
-        const [deployments, objects] = await Promise.all([getDeployments(), getGeoObjects()]);
+        const [deployments, objects] = await Promise.all([
+          getDeployments(),
+          getGeoObjects(),
+        ]);
         this.setUserMarkerPosition(deployments, 3);
         const deployGraphics = this.createDeployGraphics(deployments);
         const objectGraphics = this.createObjectGraphics(objects);
@@ -70,7 +76,7 @@ export class MapSceneView extends React.Component {
     return items.map((item) => {
       return new this.esriModules.Graphic({
         geometry: {
-          type: 'point',
+          type: "point",
           latitude: item.location.coordinates[1],
           longitude: item.location.coordinates[0],
         },
@@ -95,7 +101,7 @@ export class MapSceneView extends React.Component {
 
   setUserMarkerPosition(deployments, id) {
     deployments.forEach((deploy) => {
-      if (deploy.deployId === `${id}`) deploy.deployType = 'User';
+      if (deploy.deployId === `${id}`) deploy.tag = "User";
     });
   }
 
@@ -107,11 +113,11 @@ export class MapSceneView extends React.Component {
   addLayer(layers = []) {
     layers.forEach((layer) => {
       this.view.map.add(layer);
-      layer.on('apply-edits', (e) => {});
+      layer.on("apply-edits", (e) => {});
     });
   }
 
-  getLayer(layerTitle = '') {
+  getLayer(layerTitle = "") {
     return this.props.view.map.allLayers.find((layer) => {
       return layer.title === layerTitle;
     });
