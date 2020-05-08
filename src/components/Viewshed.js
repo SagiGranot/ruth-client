@@ -60,8 +60,8 @@ export class Viewshed extends Component {
       this.gp.outSpatialReference = { wkid: 102100 };
 
       const { features: enemyDeploys } = await this.queryEnemies();
-      // const result = await this.calcViewshed(enemyDeploys);
-      // await this.drawViewshed(result);
+      const result = await this.calcViewshed(enemyDeploys);
+      await this.drawViewshed(result);
     });
   }
 
@@ -85,7 +85,7 @@ export class Viewshed extends Component {
 
   async queryCurrentUser() {
     const res = await this.deployLayer.queryFeatures({
-      where: "deployType = 'User'",
+      where: "tag = 'User'",
       outFields: ['*'],
       returnGeometry: true,
     });
