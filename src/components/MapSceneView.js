@@ -93,7 +93,7 @@ export class MapSceneView extends React.Component {
     return items.map((item) => {
       return new this.esriModules.Graphic({
         geometry: {
-          type: 'point',
+          type: "point",
           latitude: item.location.coordinates[1],
           longitude: item.location.coordinates[0],
         },
@@ -118,7 +118,7 @@ export class MapSceneView extends React.Component {
 
   setUserMarkerPosition(deployments, id) {
     deployments.forEach((deploy) => {
-      if (deploy.deployId === `${id}`) deploy.deployType = 'User';
+      if (deploy.deployId === `${id}`) deploy.tag = "User";
     });
   }
 
@@ -143,7 +143,7 @@ export class MapSceneView extends React.Component {
     });
   }
 
-  getLayer(layerTitle = '') {
+  getLayer(layerTitle = "") {
     return this.props.view.map.allLayers.find((layer) => {
       return layer.title === layerTitle;
     });
