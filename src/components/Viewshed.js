@@ -6,6 +6,7 @@ import uniqBy from 'lodash.uniqby';
 import isPointInsidePolygon from '@turf/boolean-point-in-polygon';
 import { viewshedMarker } from '../markers/viewshed';
 import { circleMarker } from '../markers/circle';
+import axios from 'axios';
 
 const USER_ID = 3;
 const gpUrl =
@@ -59,8 +60,8 @@ export class Viewshed extends Component {
       this.gp.outSpatialReference = { wkid: 102100 };
 
       const { features: enemyDeploys } = await this.queryEnemies();
-      const result = await this.calcViewshed(enemyDeploys);
-      await this.drawViewshed(result);
+      // const result = await this.calcViewshed(enemyDeploys);
+      // await this.drawViewshed(result);
     });
   }
 
@@ -206,6 +207,11 @@ export class Viewshed extends Component {
       const inputGraphicContainer = this.createGraphicContainer(features);
       const featureSet = this.createFeatureSet(inputGraphicContainer);
       const { results } = await this.gp.execute(featureSet);
+
+      if (process.env.REACT_APP_MOCK) {
+        await axios.post('http://localhost:8081/save', { data: results[0].value.features });
+      }
+
       return results;
     } catch (error) {
       console.error(error);

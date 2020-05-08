@@ -9,6 +9,8 @@ import { objectLayerOpt } from '../layers/objectLayer';
 import { ObjectEditor } from './ObjectEditor';
 import { getDeployments } from '../api/getDeployments';
 import { getGeoObjects } from '../api/getGeoObjects';
+import { deployMarkers } from '../markers/deploy';
+import GeoObject from '../schema/GeoObject';
 export class MapSceneView extends React.Component {
   constructor(props) {
     super(props);
@@ -22,15 +24,27 @@ export class MapSceneView extends React.Component {
     this.renderEsriComponent = this.renderEsriComponent.bind(this);
     this.createDeployGraphics = this.createDeployGraphics.bind(this);
     this.createObjectGraphics = this.createObjectGraphics.bind(this);
+    this.xyToLngLat = this.xyToLngLat.bind(this);
   }
 
   async componentDidMount() {
-    loadModules(['esri/Map', 'esri/views/SceneView', 'esri/layers/FeatureLayer', 'esri/Graphic'], {
-      css: 'https://js.arcgis.com/4.15/esri/themes/dark/main.css',
-    })
-      .then(async ([Map, SceneView, FeatureLayer, Graphic]) => {
-        this.esriModules = { Map, SceneView, FeatureLayer, Graphic };
+    loadModules(
+      [
+        'esri/Map',
+        'esri/views/SceneView',
+        'esri/layers/FeatureLayer',
+        'esri/Graphic',
+        'esri/widgets/Track',
+        'esri/geometry/support/webMercatorUtils',
+      ],
+      {
+        css: 'https://js.arcgis.com/4.15/esri/themes/dark/main.css',
+      }
+    )
+      .then(async ([Map, SceneView, FeatureLayer, Graphic, Track, Utils]) => {
+        this.esriModules = { Map, SceneView, FeatureLayer, Graphic, Utils };
         const map = new Map({ basemap: 'topo-vector', ground: 'world-elevation' });
+
         this.view = new SceneView({
           container: this.mapRef.current,
           map: map,
@@ -41,14 +55,23 @@ export class MapSceneView extends React.Component {
           },
         });
 
+        var track = new Track({
+          view: this.view,
+          scale: 30000,
+          graphic: new Graphic(deployMarkers.User),
+          useHeadingEnabled: false, // Don't change orientation of the map
+        });
+
         const [deployments, objects] = await Promise.all([getDeployments(), getGeoObjects()]);
         this.setUserMarkerPosition(deployments, 3);
         const deployGraphics = this.createDeployGraphics(deployments);
         const objectGraphics = this.createObjectGraphics(objects);
         const deployLayer = this.createLayer(deployLayerOpt, deployGraphics);
         const objectLayer = this.createLayer(objectLayerOpt, objectGraphics);
+        this.view.ui.add(track, 'top-left');
 
         this.view.when(() => {
+          // mockGeolocation();
           this.addLayer([deployLayer, objectLayer]);
           this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
           this.renderEsriComponent(Viewshed, { deployments, socketio: this.socketio }, 'bottom-right');
@@ -107,7 +130,16 @@ export class MapSceneView extends React.Component {
   addLayer(layers = []) {
     layers.forEach((layer) => {
       this.view.map.add(layer);
-      layer.on('apply-edits', (e) => {});
+      layer.on('apply-edits', (e) => {
+        //when adding new object save it to db
+        const { attributes, geometry } = e.edits.addFeatures[0];
+
+        if (attributes.tag === 'Building') {
+          const rings = geometry.rings[0].map((ring) => this.xyToLngLat(ring[0], ring[1]));
+          const geoObject = new GeoObject(attributes, rings);
+          geoObject.save();
+        }
+      });
     });
   }
 
@@ -115,6 +147,10 @@ export class MapSceneView extends React.Component {
     return this.props.view.map.allLayers.find((layer) => {
       return layer.title === layerTitle;
     });
+  }
+
+  xyToLngLat(x, y) {
+    return this.esriModules.Utils.xyToLngLat(x, y);
   }
 
   renderEsriComponent(component, props = {}) {
