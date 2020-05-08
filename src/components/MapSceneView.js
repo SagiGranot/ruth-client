@@ -73,7 +73,7 @@ export class MapSceneView extends React.Component {
         this.view.when(() => {
           // mockGeolocation();
           this.addLayer([deployLayer, objectLayer]);
-          this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
+          // this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
           this.renderEsriComponent(Viewshed, { deployments, socketio: this.socketio }, 'bottom-right');
           this.renderEsriComponent(ObjectEditor);
           this.renderEsriComponent(DayLight);
@@ -93,7 +93,7 @@ export class MapSceneView extends React.Component {
     return items.map((item) => {
       return new this.esriModules.Graphic({
         geometry: {
-          type: "point",
+          type: 'point',
           latitude: item.location.coordinates[1],
           longitude: item.location.coordinates[0],
         },
@@ -118,7 +118,7 @@ export class MapSceneView extends React.Component {
 
   setUserMarkerPosition(deployments, id) {
     deployments.forEach((deploy) => {
-      if (deploy.deployId === `${id}`) deploy.tag = "User";
+      if (deploy.deployId === `${id}`) deploy.tag = 'User';
     });
   }
 
@@ -132,8 +132,11 @@ export class MapSceneView extends React.Component {
       this.view.map.add(layer);
       layer.on('apply-edits', (e) => {
         //when adding new object save it to db
-        const { attributes, geometry } = e.edits.addFeatures[0];
+        if (!e.edits.addFeatures) {
+          return;
+        }
 
+        const { attributes, geometry } = e.edits.addFeatures[0];
         if (attributes.tag === 'Building') {
           const rings = geometry.rings[0].map((ring) => this.xyToLngLat(ring[0], ring[1]));
           const geoObject = new GeoObject(attributes, rings);
@@ -143,7 +146,7 @@ export class MapSceneView extends React.Component {
     });
   }
 
-  getLayer(layerTitle = "") {
+  getLayer(layerTitle = '') {
     return this.props.view.map.allLayers.find((layer) => {
       return layer.title === layerTitle;
     });
