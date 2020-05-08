@@ -13,11 +13,6 @@ export const objectLayerOpt = {
       type: 'string',
     },
     {
-      name: 'objectType',
-      alias: 'TYPE',
-      type: 'string',
-    },
-    {
       name: 'tag',
       alias: 'TAG',
       type: 'string',
@@ -35,7 +30,7 @@ export const objectLayerOpt = {
   ],
   renderer: {
     type: 'unique-value',
-    field: 'objectType',
+    field: 'tag',
     visualVariables: [
       {
         type: 'size',

@@ -1,11 +1,11 @@
 {
-  "objectId": "String",
+  "objectId": "202",
   "location": {
-    "type": { "type": "String" },
-    "coordinates": [],
-    "elevation": "3000"
+    "type": "Polygon",
+    "coordinates": [[]],
+    "elevation": 434
   },
-  "height": "Number",
-  "additionalInfo": "String",
-  "tag": ["String"]
+  "height": 434,
+  "additionalInfo": "Enemy",
+  "tag": ["Building"]
 }
