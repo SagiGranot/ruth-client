@@ -1,12 +1,10 @@
 import { Component } from 'react';
 import { loadModules } from 'esri-loader';
-import { point, polygon } from '@turf/helpers';
-import circle from '@turf/circle';
 import uniqBy from 'lodash.uniqby';
-import isPointInsidePolygon from '@turf/boolean-point-in-polygon';
 import { viewshedMarker } from '../markers/viewshed';
 import { circleMarker } from '../markers/circle';
 import axios from 'axios';
+// import viewshedMocks from '../resources/mocks/viewshed.json';
 
 const USER_ID = 3;
 const gpUrl =
@@ -41,28 +39,55 @@ export class Viewshed extends Component {
     loadModules(
       [
         'esri/geometry/Point',
+        'esri/geometry/Circle',
+        'esri/geometry/Polyline',
         'esri/Graphic',
         'esri/layers/GraphicsLayer',
         'esri/tasks/Geoprocessor',
         'esri/tasks/support/LinearUnit',
         'esri/tasks/support/FeatureSet',
+        'esri/geometry/geometryEngine',
       ],
       { css: false }
-    ).then(async ([Point, Graphic, GraphicsLayer, Geoprocessor, LinearUnit, FeatureSet]) => {
-      this.esriModules = { Point, Graphic, GraphicsLayer, Geoprocessor, LinearUnit, FeatureSet };
-      this.deployLayer = this.props.view.map.allLayers.find((layer) => layer.title === 'deployments');
-      this.graphicsLayer = new GraphicsLayer();
-      this.props.view.map.add(this.graphicsLayer);
-      this.props.socketio.on('SEND_LOCATION', this.updateDeploys);
-      this.props.view.on('click', this.sendLocation);
+    ).then(
+      async ([
+        Point,
+        Circle,
+        Polyline,
+        Graphic,
+        GraphicsLayer,
+        Geoprocessor,
+        LinearUnit,
+        FeatureSet,
+        geometryEngine,
+      ]) => {
+        this.esriModules = {
+          Point,
+          Circle,
+          Polyline,
+          Graphic,
+          GraphicsLayer,
+          Geoprocessor,
+          LinearUnit,
+          FeatureSet,
+          geometryEngine,
+        };
+        this.deployLayer = this.props.view.map.allLayers.find((layer) => layer.title === 'deployments');
+        this.graphicsLayer = new GraphicsLayer();
+        this.props.view.map.add(this.graphicsLayer);
+        this.props.socketio.on('SEND_LOCATION', this.updateDeploys);
+        this.props.view.on('click', this.sendLocation);
 
-      this.gp = new Geoprocessor(gpUrl);
-      this.gp.outSpatialReference = { wkid: 102100 };
+        this.gp = new Geoprocessor(gpUrl);
+        this.gp.outSpatialReference = { wkid: 102100 };
 
-      const { features: enemyDeploys } = await this.queryEnemies();
-      const result = await this.calcViewshed(enemyDeploys);
-      await this.drawViewshed(result);
-    });
+        this.props.view.when(async () => {
+          const { features: enemyDeploys } = await this.queryEnemies();
+          const result = await this.calcViewshed(enemyDeploys);
+          await this.drawViewshed(result);
+        });
+      }
+    );
   }
 
   async queryEnemies() {
@@ -88,6 +113,7 @@ export class Viewshed extends Component {
       where: "tag = 'User'",
       outFields: ['*'],
       returnGeometry: true,
+      outSpatialReference: { wkid: 102100 },
     });
     return res;
   }
@@ -150,8 +176,8 @@ export class Viewshed extends Component {
     const userCircleGraphic = await this.createUserCircleGraphic(userCircle);
     if (items) {
       const viewshedPoints = items[0].value.features;
-      const userCirclePolygon = polygon(userCircle.geometry.coordinates);
-      const viewshedInsideCircle = this.getViewshedInsideCircle(viewshedPoints, userCirclePolygon);
+      // const viewshedPoints = items;
+      const viewshedInsideCircle = this.getViewshedInsideCircle(viewshedPoints, userCircle);
       this.graphicsLayer.removeAll(); //remove prev viewshed from map
       this.graphicsLayer.addMany(viewshedInsideCircle);
     } else {
@@ -162,17 +188,31 @@ export class Viewshed extends Component {
 
   async getUserCircle() {
     const user = await this.queryCurrentUser();
-    const { longitude, latitude } = this.currUserPos || user.features[0].geometry;
-    const center = [longitude, latitude];
-    return circle(center, this.userRadius);
+    const { x, y } = this.currUserPos || user.features[0].geometry;
+    const point = new this.esriModules.Point({
+      x,
+      y,
+      spatialReference: { wkid: 102100, latestWkid: 3857 },
+    });
+    const userCircle = new this.esriModules.Circle({
+      center: point,
+      radius: 3000,
+      spatialReference: { wkid: 102100, latestWkid: 3857 },
+    });
+    return userCircle;
+  }
+
+  createCutter(polygon) {
+    const cutter = new this.esriModules.Polyline({
+      paths: polygon.rings,
+      spatialReference: { wkid: 102100, latestWkid: 3857 },
+    });
+    return cutter;
   }
 
   async createUserCircleGraphic(circle) {
     const circleGraphic = new this.esriModules.Graphic({
-      geometry: {
-        type: 'polygon',
-        rings: circle.geometry.coordinates,
-      },
+      geometry: circle,
       symbol: circleMarker,
     });
     return circleGraphic;
@@ -191,21 +231,34 @@ export class Viewshed extends Component {
     };
   }
 
-  getViewshedInsideCircle(viewshedPoints = [], userCirclePolygon = {}) {
-    return viewshedPoints.filter((_point) => {
-      const lon = _point.geometry.centroid.longitude;
-      const lat = _point.geometry.centroid.latitude;
-      const viewshedPoint = point([lon, lat]);
-      return isPointInsidePolygon(viewshedPoint, userCirclePolygon)
-        ? (_point.symbol = viewshedMarker)
-        : false;
+  getViewshedInsideCircle(viewshedPolygons = [], userCirclePolygon = {}) {
+    const viewshedInCircle = [];
+    const cutter = this.createCutter(userCirclePolygon);
+
+    viewshedPolygons.forEach((polygon) => {
+      if (this.esriModules.geometryEngine.contains(userCirclePolygon, polygon.geometry)) {
+        polygon.symbol = viewshedMarker;
+        polygon.geometry.type = 'polygon';
+        viewshedInCircle.push(polygon);
+      }
+
+      if (this.esriModules.geometryEngine.intersects(userCirclePolygon, polygon.geometry)) {
+        const result = this.esriModules.geometryEngine.cut(polygon.geometry, cutter);
+        const _polygon = new this.esriModules.Graphic({
+          geometry: result[1], // result of the viewshed cutting part that inside the circle
+          symbol: viewshedMarker,
+        });
+        viewshedInCircle.push(_polygon);
+      }
     });
+    return viewshedInCircle;
   }
 
   async calcViewshed(features) {
     try {
       const inputGraphicContainer = this.createGraphicContainer(features);
       const featureSet = this.createFeatureSet(inputGraphicContainer);
+      debugger;
       const { results } = await this.gp.execute(featureSet);
 
       if (process.env.REACT_APP_MOCK) {
