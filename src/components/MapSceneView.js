@@ -71,7 +71,6 @@ export class MapSceneView extends React.Component {
         this.view.ui.add(track, 'top-left');
 
         this.view.when(() => {
-          // mockGeolocation();
           this.addLayer([deployLayer, objectLayer]);
           // this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
           this.renderEsriComponent(Viewshed, { deployments, socketio: this.socketio }, 'bottom-right');

@@ -47,8 +47,8 @@ export function mockGeolocation() {
 
   geolocate.use();
 
-  setInterval(function () {
-    geolocate.change(coords[currentCoordIndex]);
-    currentCoordIndex = (currentCoordIndex + 1) % coords.length;
-  }, 1500);
+  // setInterval(function () {
+  //   geolocate.change(coords[currentCoordIndex]);
+  //   currentCoordIndex = (currentCoordIndex + 1) % coords.length;
+  // }, 1500);
 }
