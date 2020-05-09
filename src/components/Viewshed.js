@@ -258,7 +258,6 @@ export class Viewshed extends Component {
     try {
       const inputGraphicContainer = this.createGraphicContainer(features);
       const featureSet = this.createFeatureSet(inputGraphicContainer);
-      debugger;
       const { results } = await this.gp.execute(featureSet);
 
       if (process.env.REACT_APP_MOCK) {
