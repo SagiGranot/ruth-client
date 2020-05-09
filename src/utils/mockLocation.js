@@ -45,7 +45,7 @@ export function mockGeolocation() {
     ],
     currentCoordIndex = 0;
 
-  geolocate.use();
+  // geolocate.use();
 
   // setInterval(function () {
   //   geolocate.change(coords[currentCoordIndex]);

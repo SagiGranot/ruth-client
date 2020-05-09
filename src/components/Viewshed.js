@@ -4,6 +4,8 @@ import uniqBy from 'lodash.uniqby';
 import { viewshedMarker } from '../markers/viewshed';
 import { circleMarker } from '../markers/circle';
 import axios from 'axios';
+var geolocate = require('mock-geolocation');
+
 // import viewshedMocks from '../resources/mocks/viewshed.json';
 
 const USER_ID = 3;
@@ -82,6 +84,7 @@ export class Viewshed extends Component {
         this.gp.outSpatialReference = { wkid: 102100 };
 
         this.props.view.when(async () => {
+          geolocate.use();
           const { features: enemyDeploys } = await this.queryEnemies();
           const result = await this.calcViewshed(enemyDeploys);
           await this.drawViewshed(result);
@@ -151,6 +154,10 @@ export class Viewshed extends Component {
       const result = await this.calcViewshed(enemiesSet);
       await this.drawViewshed(result);
       await this.deployLayer.applyEdits(edits);
+      geolocate.change({
+        lng: this.currUserPos.longitude,
+        lat: this.currUserPos.latitude,
+      });
     } catch (error) {
       console.log(error);
     }
