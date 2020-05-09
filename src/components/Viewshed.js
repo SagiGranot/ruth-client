@@ -123,7 +123,8 @@ export class Viewshed extends Component {
 
   async updateDeployPosition(deploy) {
     const deployId = deploy.deployId;
-    if (deployId === USER_ID) {
+    if (deployId == USER_ID) {
+      console.log('update user position');
       this.currUserPos = {
         longitude: deploy.location.coordinates[0],
         latitude: deploy.location.coordinates[1],
@@ -195,7 +196,7 @@ export class Viewshed extends Component {
 
   async getUserCircle() {
     const user = await this.queryCurrentUser();
-    const { x, y } = this.currUserPos || user.features[0].geometry;
+    const { x, y } = user.features[0].geometry;
     const point = new this.esriModules.Point({
       x,
       y,
