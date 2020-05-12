@@ -11,6 +11,9 @@ import { getDeployments } from '../api/getDeployments';
 import { getGeoObjects } from '../api/getGeoObjects';
 import { deployMarkers } from '../markers/deploy';
 import GeoObject from '../schema/GeoObject';
+var geolocate = require('mock-geolocation');
+
+// import { mockGeolocation } from '../utils/mockLocation';
 export class MapSceneView extends React.Component {
   constructor(props) {
     super(props);
@@ -44,6 +47,7 @@ export class MapSceneView extends React.Component {
       .then(async ([Map, SceneView, FeatureLayer, Graphic, Track, Utils]) => {
         this.esriModules = { Map, SceneView, FeatureLayer, Graphic, Utils };
         const map = new Map({ basemap: 'topo-vector', ground: 'world-elevation' });
+        geolocate.use();
 
         this.view = new SceneView({
           container: this.mapRef.current,
@@ -71,9 +75,44 @@ export class MapSceneView extends React.Component {
         this.view.ui.add(track, 'top-left');
 
         this.view.when(() => {
+          console.log('this.view.center ' + this.view.center);
+          var prevLocation = this.view.center;
+
+          track.on('track', function () {
+            var location = track.graphic.geometry;
+            console.log('track.graphic.geometry ' + track.graphic.geometry);
+
+            this.view
+              .goTo({
+                center: location,
+                tilt: 50,
+                heading: 360 - getHeading(location, prevLocation), // only applies to SceneView
+              })
+              .catch(function (error) {
+                if (error.name != 'AbortError') {
+                  console.error(error);
+                }
+              });
+
+            prevLocation = location.clone();
+          });
+
+          track.start();
+
+          function getHeading(point, oldPoint) {
+            // get angle between two points
+            var angleInDegrees = (Math.atan2(point.y - oldPoint.y, point.x - oldPoint.x) * 180) / Math.PI;
+
+            // move heading north
+            return -90 + angleInDegrees;
+          }
           this.addLayer([deployLayer, objectLayer]);
           // this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
-          this.renderEsriComponent(Viewshed, { deployments, socketio: this.socketio }, 'bottom-right');
+          this.renderEsriComponent(
+            Viewshed,
+            { Utils, deployments, socketio: this.socketio, track },
+            'bottom-right'
+          );
           this.renderEsriComponent(ObjectEditor);
           this.renderEsriComponent(DayLight);
         });

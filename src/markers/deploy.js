@@ -1,40 +1,40 @@
 const deployMarkers = {
   FriendlyTank: {
-    value: "Friendly, Tank",
+    value: 'Friendly, Tank',
     symbol: {
-      type: "point-3d",
+      type: 'point-3d',
       symbolLayers: [
         {
-          type: "icon",
-          anchor: "center",
+          type: 'icon',
+          anchor: 'center',
           width: 200,
           height: 200,
           resource: {
             // origin:
-            href: "https://i.imgur.com/qT34iLD.png",
+            href: 'https://i.imgur.com/qT34iLD.png',
             //href: "https://i.imgur.com/fri8Mo0.png",
           },
           size: 40,
         },
       ],
       styleOrigin: {
-        styleName: "EsriRecreationStyle",
-        name: "Slide",
+        styleName: 'EsriRecreationStyle',
+        name: 'Slide',
       },
     },
   },
   EnemyTank: {
-    value: "Enemy, Tank",
+    value: 'Enemy, Tank',
     symbol: {
-      type: "point-3d",
+      type: 'point-3d',
       symbolLayers: [
         {
-          type: "icon",
-          anchor: "center",
+          type: 'icon',
+          anchor: 'center',
           width: 100,
           height: 100,
           resource: {
-            href: "https://i.imgur.com/JmcioEL.png",
+            href: 'https://i.imgur.com/JmcioEL.png',
           },
           size: 40,
         },
@@ -42,35 +42,35 @@ const deployMarkers = {
     },
   },
   User: {
-    value: "Friendly, User",
+    value: 'Friendly, User',
     symbol: {
-      type: "point-3d",
+      type: 'point-3d',
       symbolLayers: [
         {
-          type: "icon",
-          anchor: "center",
+          type: 'icon',
+          anchor: 'center',
           width: 60,
           height: 60,
           resource: {
-            href: "https://i.imgur.com/lb9cyRR.png",
+            href: 'https://i.imgur.com/slhlyVl.png',
           },
-          size: 32,
+          size: 26,
         },
       ],
     },
   },
   EnemyRPG: {
-    value: "Enemy, RPG",
+    value: 'Enemy, RPG',
     symbol: {
-      type: "point-3d",
+      type: 'point-3d',
       symbolLayers: [
         {
-          type: "icon",
-          anchor: "center",
+          type: 'icon',
+          anchor: 'center',
           width: 100,
           height: 100,
           resource: {
-            href: "https://i.imgur.com/qmGNgjB.png",
+            href: 'https://i.imgur.com/qmGNgjB.png',
           },
           size: 70,
         },
@@ -78,17 +78,17 @@ const deployMarkers = {
     },
   },
   FriendlyRPG: {
-    value: "Friendly, RPG",
+    value: 'Friendly, RPG',
     symbol: {
-      type: "point-3d",
+      type: 'point-3d',
       symbolLayers: [
         {
-          type: "icon",
-          anchor: "center",
+          type: 'icon',
+          anchor: 'center',
           width: 100,
           height: 100,
           resource: {
-            href: "https://i.imgur.com/KC6FhVG.png",
+            href: 'https://i.imgur.com/KC6FhVG.png',
           },
           size: 70,
         },
@@ -96,17 +96,17 @@ const deployMarkers = {
     },
   },
   FriendlyHuman: {
-    value: "Friendly, Human",
+    value: 'Friendly, Human',
     symbol: {
-      type: "point-3d",
+      type: 'point-3d',
       symbolLayers: [
         {
-          type: "icon",
-          anchor: "center",
+          type: 'icon',
+          anchor: 'center',
           width: 100,
           height: 100,
           resource: {
-            href: "https://i.imgur.com/oU24X3Y.png",
+            href: 'https://i.imgur.com/oU24X3Y.png',
           },
           size: 80,
         },
@@ -114,17 +114,17 @@ const deployMarkers = {
     },
   },
   EnemyHuman: {
-    value: "Enemy, Human",
+    value: 'Enemy, Human',
     symbol: {
-      type: "point-3d",
+      type: 'point-3d',
       symbolLayers: [
         {
-          type: "icon",
-          anchor: "center",
+          type: 'icon',
+          anchor: 'center',
           width: 100,
           height: 100,
           resource: {
-            href: "https://i.imgur.com/PSp774f.png",
+            href: 'https://i.imgur.com/PSp774f.png',
           },
           size: 80,
         },
@@ -132,17 +132,17 @@ const deployMarkers = {
     },
   },
   EnemyJeep: {
-    value: "Enemy, Jeep",
+    value: 'Enemy, Jeep',
     symbol: {
-      type: "point-3d",
+      type: 'point-3d',
       symbolLayers: [
         {
-          type: "icon",
-          anchor: "center",
+          type: 'icon',
+          anchor: 'center',
           width: 100,
           height: 100,
           resource: {
-            href: "https://i.imgur.com/Bt0clWa.png",
+            href: 'https://i.imgur.com/Bt0clWa.png',
           },
           size: 80,
         },
@@ -150,17 +150,17 @@ const deployMarkers = {
     },
   },
   FriendlyJeep: {
-    value: "Friendly, Jeep",
+    value: 'Friendly, Jeep',
     symbol: {
-      type: "point-3d",
+      type: 'point-3d',
       symbolLayers: [
         {
-          type: "icon",
-          anchor: "center",
+          type: 'icon',
+          anchor: 'center',
           width: 100,
           height: 100,
           resource: {
-            href: "https://i.imgur.com/fri8Mo0.png",
+            href: 'https://i.imgur.com/fri8Mo0.png',
           },
           size: 80,
         },
@@ -169,22 +169,22 @@ const deployMarkers = {
   },
 
   popupTemplate: {
-    title: "{deployType}",
+    title: '{deployType}',
     content: [
       {
-        type: "fields",
+        type: 'fields',
         fieldInfos: [
           {
-            fieldName: "deployId",
-            label: "Deploy Id",
+            fieldName: 'deployId',
+            label: 'Deploy Id',
           },
           {
-            fieldName: "additionalInfo",
-            label: "Description",
+            fieldName: 'additionalInfo',
+            label: 'Description',
           },
           {
-            fieldName: "reportingUserId",
-            label: "Reporting User",
+            fieldName: 'reportingUserId',
+            label: 'Reporting User',
           },
         ],
       },
@@ -192,23 +192,23 @@ const deployMarkers = {
   },
   amountLabel: {
     symbol: {
-      type: "text",
-      color: "white",
-      haloColor: "black",
-      haloSize: "4px",
-      text: "You are here",
+      type: 'text',
+      color: 'white',
+      haloColor: 'black',
+      haloSize: '4px',
+      text: 'You are here',
       font: {
         size: 13,
-        family: "Josefin Slab",
+        family: 'Josefin Slab',
       },
     },
-    labelPlacement: "center-right",
+    labelPlacement: 'center-right',
     labelExpressionInfo: {
-      expression: "$feature.amount",
+      expression: '$feature.amount',
     },
   },
   fillSymbol: {
-    type: "simple-fill",
+    type: 'simple-fill',
     color: [255, 0, 0, 0.4],
     outline: {
       color: [255, 255, 255, 0.0],
