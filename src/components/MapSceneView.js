@@ -61,7 +61,7 @@ export class MapSceneView extends React.Component {
 
         var track = new Track({
           view: this.view,
-          scale: 30000,
+          scale: 10000,
           graphic: new Graphic(deployMarkers.User),
           useHeadingEnabled: false, // Don't change orientation of the map
         });
@@ -85,7 +85,7 @@ export class MapSceneView extends React.Component {
             this.view
               .goTo({
                 center: location,
-                tilt: 50,
+                tilt: 65,
                 heading: 360 - getHeading(location, prevLocation), // only applies to SceneView
               })
               .catch(function (error) {
