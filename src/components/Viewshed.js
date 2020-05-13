@@ -4,8 +4,14 @@ import uniqBy from 'lodash.uniqby';
 import { viewshedMarker } from '../markers/viewshed';
 import { circleMarker } from '../markers/circle';
 import axios from 'axios';
+
+import viewshedMocks1 from '../resources/mocks/viewshed-1.json';
+import viewshedMocks2 from '../resources/mocks/viewshed-2.json';
+import viewshedMocks3 from '../resources/mocks/viewshed-3.json';
+import viewshedMocks4 from '../resources/mocks/viewshed-4.json';
+
+var viewshedArr = [viewshedMocks4, viewshedMocks3, viewshedMocks2, viewshedMocks1];
 var geolocate = require('mock-geolocation');
-// import viewshedMocks from '../resources/mocks/viewshed.json';
 
 const USER_ID = 3;
 const gpUrl =
@@ -97,8 +103,9 @@ export class Viewshed extends Component {
         this.gp.outSpatialReference = { wkid: 102100 };
 
         this.props.view.when(async () => {
-          const { features: enemyDeploys } = await this.queryEnemies();
-          const result = await this.calcViewshed(enemyDeploys);
+          // const { features: enemyDeploys } = await this.queryEnemies();
+          // const result = await this.calcViewshed(enemyDeploys);
+          const result = viewshedArr.pop();
           await this.drawViewshed(result);
 
           geolocate.change({
@@ -216,8 +223,9 @@ export class Viewshed extends Component {
     const userCircle = await this.getUserCircle();
     const userCircleGraphic = await this.createUserCircleGraphic(userCircle);
     if (items) {
-      const viewshedPoints = items[0].value.features;
-      // const viewshedPoints = items;
+      // const viewshedPoints = items[0].value.features;
+      const viewshedPoints = items;
+      viewshedPoints.forEach((viewshedPoint) => (viewshedPoint.geometry.type = 'polygon'));
       // const viewshedInsideCircle = this.getViewshedInsideCircle(viewshedPoints, userCircle);
       this.graphicsLayer.removeAll(); //remove prev viewshed from map
       this.graphicsLayer.addMany(viewshedPoints);
@@ -303,13 +311,15 @@ export class Viewshed extends Component {
   async calcViewshed(features) {
     try {
       console.log('calling calcViewshed()...');
-      const inputGraphicContainer = this.createGraphicContainer(features);
-      const featureSet = this.createFeatureSet(inputGraphicContainer);
-      const { results } = await this.gp.execute(featureSet);
+      // const inputGraphicContainer = this.createGraphicContainer(features);
+      // const featureSet = this.createFeatureSet(inputGraphicContainer);
+      // const { results } = await this.gp.execute(featureSet);
+      //pop viewshed
+      let results = viewshedArr.pop();
 
-      if (process.env.REACT_APP_MOCK) {
-        await axios.post('http://localhost:8081/save', { data: results[0].value.features });
-      }
+      // if (process.env.REACT_APP_MOCK) {
+      //   await axios.post('http://localhost:8081/save', { data: results[0].value.features });
+      // }
 
       this.viewshed = results;
       return results;
