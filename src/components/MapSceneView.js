@@ -61,7 +61,7 @@ export class MapSceneView extends React.Component {
 
         var track = new Track({
           view: this.view,
-          scale: 10000,
+          scale: 15000,
           graphic: new Graphic(deployMarkers.User),
           useHeadingEnabled: false, // Don't change orientation of the map
         });

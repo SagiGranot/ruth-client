@@ -105,7 +105,7 @@ export class Viewshed extends Component {
         this.props.view.when(async () => {
           // const { features: enemyDeploys } = await this.queryEnemies();
           // const result = await this.calcViewshed(enemyDeploys);
-          const result = viewshedArr.pop();
+          const result = viewshedArr[3];
           await this.drawViewshed(result);
 
           geolocate.change({
