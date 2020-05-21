@@ -1,9 +1,9 @@
-import { Component } from 'react';
-import { loadModules } from 'esri-loader';
+import { Component } from "react";
+import { loadModules } from "esri-loader";
 
 export class ObjectEditor extends Component {
   componentDidMount() {
-    loadModules(['esri/widgets/Editor', 'esri/widgets/Expand'], {
+    loadModules(["esri/widgets/Editor", "esri/widgets/Expand"], {
       css: false,
     }).then(([Editor, Expand]) => {
       this.props.view.when(() => {
@@ -13,13 +13,13 @@ export class ObjectEditor extends Component {
         });
 
         const expand = new Expand({
-          expandTooltip: 'Expand object editor widget',
+          expandTooltip: "Expand object editor widget",
           view: this.props.view,
           content: editor,
           expanded: false,
         });
 
-        this.props.view.ui.add(expand, 'top-right');
+        this.props.view.ui.add(expand, "top-right");
       });
     });
   }
