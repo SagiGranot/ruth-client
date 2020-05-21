@@ -4,9 +4,14 @@ import uniqBy from 'lodash.uniqby';
 import { viewshedMarker } from '../markers/viewshed';
 import { circleMarker } from '../markers/circle';
 import axios from 'axios';
-var geolocate = require('mock-geolocation');
 
-// import viewshedMocks from '../resources/mocks/viewshed.json';
+import viewshedMocks1 from '../resources/mocks/viewshed-1.json';
+import viewshedMocks2 from '../resources/mocks/viewshed-2.json';
+import viewshedMocks3 from '../resources/mocks/viewshed-3.json';
+import viewshedMocks4 from '../resources/mocks/viewshed-4.json';
+
+var viewshedArr = [viewshedMocks4, viewshedMocks4, viewshedMocks3, viewshedMocks2, viewshedMocks1];
+var geolocate = require('mock-geolocation');
 
 const USER_ID = 3;
 const gpUrl =
@@ -23,6 +28,7 @@ export class Viewshed extends Component {
     this.gp = {};
     this.currUserPos = null;
     this.userRadius = 3;
+    this.viewshed = null;
 
     this.createUserCircleGraphic = this.createUserCircleGraphic.bind(this);
     this.getViewshedInsideCircle = this.getViewshedInsideCircle.bind(this);
@@ -80,14 +86,32 @@ export class Viewshed extends Component {
         this.props.socketio.on('SEND_LOCATION', this.updateDeploys);
         this.props.view.on('click', this.sendLocation);
 
+        const user = await this.queryCurrentUser();
+
+        const [x, y] = this.props.Utils.lngLatToXY(
+          user.features[0].geometry.longitude,
+          user.features[0].geometry.latitude
+        );
+        this.currUserPos = {
+          longitude: user.features[0].geometry.longitude,
+          latitude: user.features[0].geometry.latitude,
+          x,
+          y,
+        };
+
         this.gp = new Geoprocessor(gpUrl);
         this.gp.outSpatialReference = { wkid: 102100 };
 
         this.props.view.when(async () => {
-          geolocate.use();
-          const { features: enemyDeploys } = await this.queryEnemies();
-          const result = await this.calcViewshed(enemyDeploys);
+          // const { features: enemyDeploys } = await this.queryEnemies();
+          // const result = await this.calcViewshed(enemyDeploys);
+          const result = viewshedArr[3];
           await this.drawViewshed(result);
+
+          geolocate.change({
+            lng: this.currUserPos.longitude,
+            lat: this.currUserPos.latitude,
+          });
         });
       }
     );
@@ -125,9 +149,14 @@ export class Viewshed extends Component {
     const deployId = deploy.deployId;
     if (deployId == USER_ID) {
       console.log('update user position');
+      const lon = deploy.location.coordinates[0];
+      const lat = deploy.location.coordinates[1];
+      const [x, y] = this.props.Utils.lngLatToXY(lon, lat);
       this.currUserPos = {
-        longitude: deploy.location.coordinates[0],
-        latitude: deploy.location.coordinates[1],
+        longitude: lon,
+        latitude: lat,
+        x,
+        y,
       };
     }
 
@@ -140,6 +169,8 @@ export class Viewshed extends Component {
   }
 
   async updateDeploys(deploys) {
+    console.log('deploys length--> ', deploys.length);
+    console.log('deploys --> ', deploys);
     try {
       const deploysToUpdate = await Promise.all(
         deploys.map(async (deploy) => {
@@ -152,9 +183,18 @@ export class Viewshed extends Component {
       const { features: enemyDeploys } = await this.queryEnemies();
       const enemiesToUpdates = deploysToUpdate.filter((deploy) => deploy.attributes.deployType === 'Enemy');
       const enemiesSet = uniqBy([...enemiesToUpdates, ...enemyDeploys], 'attributes.deployId');
-      const result = await this.calcViewshed(enemiesSet);
-      await this.drawViewshed(result);
+
+      let viewshedToDraw = null;
+      console.log('enemiesToUpdates.length ' + enemiesToUpdates.length);
+      if (enemiesToUpdates.length > 0) {
+        viewshedToDraw = await this.calcViewshed(enemiesSet);
+      } else {
+        viewshedToDraw = this.viewshed;
+      }
+
+      await this.drawViewshed(viewshedToDraw);
       await this.deployLayer.applyEdits(edits);
+
       geolocate.change({
         lng: this.currUserPos.longitude,
         lat: this.currUserPos.latitude,
@@ -183,8 +223,9 @@ export class Viewshed extends Component {
     const userCircle = await this.getUserCircle();
     const userCircleGraphic = await this.createUserCircleGraphic(userCircle);
     if (items) {
-      const viewshedPoints = items[0].value.features;
-      // const viewshedPoints = items;
+      // const viewshedPoints = items[0].value.features;
+      const viewshedPoints = items;
+      viewshedPoints.forEach((viewshedPoint) => (viewshedPoint.geometry.type = 'polygon'));
       const viewshedInsideCircle = this.getViewshedInsideCircle(viewshedPoints, userCircle);
       this.graphicsLayer.removeAll(); //remove prev viewshed from map
       this.graphicsLayer.addMany(viewshedInsideCircle);
@@ -192,11 +233,16 @@ export class Viewshed extends Component {
       this.graphicsLayer.removeAll(); //remove prev viewshed from map
     }
     this.graphicsLayer.add(userCircleGraphic);
+    geolocate.change({
+      lng: this.currUserPos.longitude,
+      lat: this.currUserPos.latitude,
+    });
   }
 
   async getUserCircle() {
-    const user = await this.queryCurrentUser();
-    const { x, y } = user.features[0].geometry;
+    // const user = await this.queryCurrentUser();
+    // const { x, y } = user.features[0].geometry;
+    const { x, y } = this.currUserPos;
     const point = new this.esriModules.Point({
       x,
       y,
@@ -264,14 +310,18 @@ export class Viewshed extends Component {
 
   async calcViewshed(features) {
     try {
-      const inputGraphicContainer = this.createGraphicContainer(features);
-      const featureSet = this.createFeatureSet(inputGraphicContainer);
-      const { results } = await this.gp.execute(featureSet);
+      console.log('calling calcViewshed()...');
+      // const inputGraphicContainer = this.createGraphicContainer(features);
+      // const featureSet = this.createFeatureSet(inputGraphicContainer);
+      // const { results } = await this.gp.execute(featureSet);
+      //pop viewshed
+      let results = viewshedArr.pop();
 
-      if (process.env.REACT_APP_MOCK) {
-        await axios.post('http://localhost:8081/save', { data: results[0].value.features });
-      }
+      // if (process.env.REACT_APP_MOCK) {
+      //   await axios.post('http://localhost:8081/save', { data: results[0].value.features });
+      // }
 
+      this.viewshed = results;
       return results;
     } catch (error) {
       console.error(error);

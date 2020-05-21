@@ -13,7 +13,7 @@ const App = () => {
   return (
     <div className="App">
       <Header />
-      <ToastProvider components={{ Toast: CustomToast }} placement="top-center">
+      <ToastProvider components={{ Toast: CustomToast }} placement="bottom-right">
         <Notification socketio={socketio} />
         <MapSceneView socketio={socketio} />
         <footer />

@@ -12,6 +12,9 @@ import { getDeployments } from "../api/getDeployments";
 import { getGeoObjects } from "../api/getGeoObjects";
 import { deployMarkers } from "../markers/deploy";
 import GeoObject from "../schema/GeoObject";
+var geolocate = require("mock-geolocation");
+
+// import { mockGeolocation } from '../utils/mockLocation';
 export class MapSceneView extends React.Component {
   constructor(props) {
     super(props);
@@ -48,6 +51,11 @@ export class MapSceneView extends React.Component {
           basemap: "topo-vector",
           ground: "world-elevation",
         });
+        debugger;
+        const params = new URLSearchParams(window.location.search);
+        const userId = params.get("userId");
+
+        geolocate.use();
 
         this.view = new SceneView({
           container: this.mapRef.current,
@@ -61,7 +69,7 @@ export class MapSceneView extends React.Component {
 
         var track = new Track({
           view: this.view,
-          scale: 30000,
+          scale: 10000,
           graphic: new Graphic(deployMarkers.User),
           useHeadingEnabled: false, // Don't change orientation of the map
         });
@@ -70,7 +78,8 @@ export class MapSceneView extends React.Component {
           getDeployments(),
           getGeoObjects(),
         ]);
-        this.setUserMarkerPosition(deployments, 3);
+        debugger;
+        this.setUserMarkerPosition(deployments, userId);
         const deployGraphics = this.createDeployGraphics(deployments);
         const objectGraphics = this.createObjectGraphics(objects);
         const deployLayer = this.createLayer(deployLayerOpt, deployGraphics);
@@ -78,11 +87,44 @@ export class MapSceneView extends React.Component {
         this.view.ui.add(track, "top-left");
 
         this.view.when(() => {
+          console.log("this.view.center " + this.view.center);
+          var prevLocation = this.view.center;
+
+          track.on("track", function () {
+            var location = track.graphic.geometry;
+            console.log("track.graphic.geometry " + track.graphic.geometry);
+
+            this.view
+              .goTo({
+                center: location,
+                tilt: 65,
+                heading: 360 - getHeading(location, prevLocation), // only applies to SceneView
+              })
+              .catch(function (error) {
+                if (error.name != "AbortError") {
+                  console.error(error);
+                }
+              });
+
+            prevLocation = location.clone();
+          });
+
+          track.start();
+
+          function getHeading(point, oldPoint) {
+            // get angle between two points
+            var angleInDegrees =
+              (Math.atan2(point.y - oldPoint.y, point.x - oldPoint.x) * 180) /
+              Math.PI;
+
+            // move heading north
+            return -90 + angleInDegrees;
+          }
           this.addLayer([deployLayer, objectLayer]);
           // this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
           this.renderEsriComponent(
             Viewshed,
-            { deployments, socketio: this.socketio },
+            { Utils, deployments, socketio: this.socketio, track },
             "bottom-right"
           );
           this.renderEsriComponent(ObjectEditor);
