@@ -47,6 +47,10 @@ export class MapSceneView extends React.Component {
       .then(async ([Map, SceneView, FeatureLayer, Graphic, Track, Utils]) => {
         this.esriModules = { Map, SceneView, FeatureLayer, Graphic, Utils };
         const map = new Map({ basemap: 'topo-vector', ground: 'world-elevation' });
+        debugger;
+        const params = new URLSearchParams(window.location.search);
+        const userId = params.get('userId');
+
         geolocate.use();
 
         this.view = new SceneView({
@@ -61,13 +65,14 @@ export class MapSceneView extends React.Component {
 
         var track = new Track({
           view: this.view,
-          scale: 15000,
+          scale: 10000,
           graphic: new Graphic(deployMarkers.User),
           useHeadingEnabled: false, // Don't change orientation of the map
         });
 
         const [deployments, objects] = await Promise.all([getDeployments(), getGeoObjects()]);
-        this.setUserMarkerPosition(deployments, 3);
+        debugger;
+        this.setUserMarkerPosition(deployments, userId);
         const deployGraphics = this.createDeployGraphics(deployments);
         const objectGraphics = this.createObjectGraphics(objects);
         const deployLayer = this.createLayer(deployLayerOpt, deployGraphics);

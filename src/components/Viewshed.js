@@ -10,7 +10,7 @@ import viewshedMocks2 from '../resources/mocks/viewshed-2.json';
 import viewshedMocks3 from '../resources/mocks/viewshed-3.json';
 import viewshedMocks4 from '../resources/mocks/viewshed-4.json';
 
-var viewshedArr = [viewshedMocks4, viewshedMocks3, viewshedMocks2, viewshedMocks1];
+var viewshedArr = [viewshedMocks4, viewshedMocks4, viewshedMocks3, viewshedMocks2, viewshedMocks1];
 var geolocate = require('mock-geolocation');
 
 const USER_ID = 3;
@@ -226,9 +226,9 @@ export class Viewshed extends Component {
       // const viewshedPoints = items[0].value.features;
       const viewshedPoints = items;
       viewshedPoints.forEach((viewshedPoint) => (viewshedPoint.geometry.type = 'polygon'));
-      // const viewshedInsideCircle = this.getViewshedInsideCircle(viewshedPoints, userCircle);
+      const viewshedInsideCircle = this.getViewshedInsideCircle(viewshedPoints, userCircle);
       this.graphicsLayer.removeAll(); //remove prev viewshed from map
-      this.graphicsLayer.addMany(viewshedPoints);
+      this.graphicsLayer.addMany(viewshedInsideCircle);
     } else {
       this.graphicsLayer.removeAll(); //remove prev viewshed from map
     }
