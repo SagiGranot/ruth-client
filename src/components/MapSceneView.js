@@ -9,6 +9,7 @@ import { deployLayerOpt } from "../layers/deployLayer";
 import { objectLayerOpt } from "../layers/objectLayer";
 import { ObjectEditor } from "./ObjectEditor";
 import { getDeployments } from "../api/getDeployments";
+import { getDeltas } from "../api/getDeltas";
 import { getGeoObjects } from "../api/getGeoObjects";
 import { deployMarkers } from "../markers/deploy";
 import GeoObject from "../schema/GeoObject";
@@ -74,14 +75,16 @@ export class MapSceneView extends React.Component {
           useHeadingEnabled: false, // Don't change orientation of the map
         });
 
-        const [deployments, objects] = await Promise.all([
+        const [deployments, objects, deltas] = await Promise.all([
           getDeployments(),
           getGeoObjects(),
+          getDeltas(userId),
         ]);
         debugger;
         this.setUserMarkerPosition(deployments, userId);
         const deployGraphics = this.createDeployGraphics(deployments);
         const objectGraphics = this.createObjectGraphics(objects);
+
         const deployLayer = this.createLayer(deployLayerOpt, deployGraphics);
         const objectLayer = this.createLayer(objectLayerOpt, objectGraphics);
         this.view.ui.add(track, "top-left");
@@ -129,7 +132,7 @@ export class MapSceneView extends React.Component {
           );
           this.renderEsriComponent(ObjectEditor);
           this.renderEsriComponent(DayLight);
-          this.renderEsriComponent(DeltaLogs);
+          this.renderEsriComponent(DeltaLogs, { deltas });
         });
       })
       .catch((e) => console.log(e));
