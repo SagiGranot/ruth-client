@@ -1,20 +1,5 @@
 import React, { Component } from "react";
 import { loadModules } from "esri-loader";
-import moment from "moment";
-
-// let deltasLogs = [
-//   "Log 1",
-//   "Log 2",
-//   "Log 3",
-//   "Log 4",
-//   "Log 5",
-//   "Log 6",
-//   "Log 7",
-//   "Log 8",
-//   "Log 9",
-//   "Log 10",
-// ];
-// let date = moment().format("DD-MM-YYYY hh:mm:ss");
 
 export class DeltaLogs extends React.Component {
   constructor() {
