@@ -13,7 +13,7 @@ import viewshedMocks4 from '../resources/mocks/viewshed-4.json';
 var viewshedArr = [viewshedMocks4, viewshedMocks4, viewshedMocks3, viewshedMocks2, viewshedMocks1];
 var geolocate = require('mock-geolocation');
 
-const USER_ID = 3;
+// const USER_ID = 3;
 const gpUrl =
   'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed';
 
@@ -87,7 +87,6 @@ export class Viewshed extends Component {
         this.props.view.on('click', this.sendLocation);
 
         const user = await this.queryCurrentUser();
-
         const [x, y] = this.props.Utils.lngLatToXY(
           user.features[0].geometry.longitude,
           user.features[0].geometry.latitude
@@ -147,7 +146,7 @@ export class Viewshed extends Component {
 
   async updateDeployPosition(deploy) {
     const deployId = deploy.deployId;
-    if (deployId == USER_ID) {
+    if (deployId == this.props.userId) {
       console.log('update user position');
       const lon = deploy.location.coordinates[0];
       const lat = deploy.location.coordinates[1];
@@ -169,8 +168,6 @@ export class Viewshed extends Component {
   }
 
   async updateDeploys(deploys) {
-    console.log('deploys length--> ', deploys.length);
-    console.log('deploys --> ', deploys);
     try {
       const deploysToUpdate = await Promise.all(
         deploys.map(async (deploy) => {

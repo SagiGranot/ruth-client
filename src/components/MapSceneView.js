@@ -1,19 +1,19 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import { loadModules } from "esri-loader";
-import { LineOfSight } from "./LineOfSight";
-import { Viewshed } from "./Viewshed";
-import { DayLight } from "./DayLight";
-import { DeltaLogs } from "./DeltaLogs";
-import { deployLayerOpt } from "../layers/deployLayer";
-import { objectLayerOpt } from "../layers/objectLayer";
-import { ObjectEditor } from "./ObjectEditor";
-import { getDeployments } from "../api/getDeployments";
-import { getDeltas } from "../api/getDeltas";
-import { getGeoObjects } from "../api/getGeoObjects";
-import { deployMarkers } from "../markers/deploy";
-import GeoObject from "../schema/GeoObject";
-var geolocate = require("mock-geolocation");
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { loadModules } from 'esri-loader';
+import { LineOfSight } from './LineOfSight';
+import { Viewshed } from './Viewshed';
+import { DayLight } from './DayLight';
+import { DeltaLogs } from './DeltaLogs';
+import { deployLayerOpt } from '../layers/deployLayer';
+import { objectLayerOpt } from '../layers/objectLayer';
+import { ObjectEditor } from './ObjectEditor';
+import { getDeployments } from '../api/getDeployments';
+import { getDeltas } from '../api/getDeltas';
+import { getGeoObjects } from '../api/getGeoObjects';
+import { deployMarkers } from '../markers/deploy';
+import GeoObject from '../schema/GeoObject';
+var geolocate = require('mock-geolocation');
 
 // import { mockGeolocation } from '../utils/mockLocation';
 export class MapSceneView extends React.Component {
@@ -22,6 +22,7 @@ export class MapSceneView extends React.Component {
     this.mapRef = React.createRef();
     this.esriModules = {};
     this.socketio = this.props.socketio;
+    this.userId = this.props.userId;
 
     this.setUserMarkerPosition = this.setUserMarkerPosition.bind(this);
     this.addLayer = this.addLayer.bind(this);
@@ -35,26 +36,23 @@ export class MapSceneView extends React.Component {
   async componentDidMount() {
     loadModules(
       [
-        "esri/Map",
-        "esri/views/SceneView",
-        "esri/layers/FeatureLayer",
-        "esri/Graphic",
-        "esri/widgets/Track",
-        "esri/geometry/support/webMercatorUtils",
+        'esri/Map',
+        'esri/views/SceneView',
+        'esri/layers/FeatureLayer',
+        'esri/Graphic',
+        'esri/widgets/Track',
+        'esri/geometry/support/webMercatorUtils',
       ],
       {
-        css: "https://js.arcgis.com/4.15/esri/themes/dark/main.css",
+        css: 'https://js.arcgis.com/4.15/esri/themes/dark/main.css',
       }
     )
       .then(async ([Map, SceneView, FeatureLayer, Graphic, Track, Utils]) => {
         this.esriModules = { Map, SceneView, FeatureLayer, Graphic, Utils };
         const map = new Map({
-          basemap: "topo-vector",
-          ground: "world-elevation",
+          basemap: 'topo-vector',
+          ground: 'world-elevation',
         });
-        debugger;
-        const params = new URLSearchParams(window.location.search);
-        const userId = params.get("userId");
 
         geolocate.use();
 
@@ -63,7 +61,7 @@ export class MapSceneView extends React.Component {
           map: map,
           camera: { position: [35.5954, 30.993, 3000], tilt: 46, fov: 100 },
           environment: {
-            atmosphere: { quality: "low" },
+            atmosphere: { quality: 'low' },
             lighting: { date: new Date(), directShadowsEnabled: false },
           },
         });
@@ -78,24 +76,21 @@ export class MapSceneView extends React.Component {
         const [deployments, objects, deltas] = await Promise.all([
           getDeployments(),
           getGeoObjects(),
-          getDeltas(userId),
+          getDeltas(this.userId),
         ]);
-        debugger;
-        this.setUserMarkerPosition(deployments, userId);
+        this.setUserMarkerPosition(deployments, this.userId);
         const deployGraphics = this.createDeployGraphics(deployments);
         const objectGraphics = this.createObjectGraphics(objects);
 
         const deployLayer = this.createLayer(deployLayerOpt, deployGraphics);
         const objectLayer = this.createLayer(objectLayerOpt, objectGraphics);
-        this.view.ui.add(track, "top-left");
+        this.view.ui.add(track, 'top-left');
 
         this.view.when(() => {
-          console.log("this.view.center " + this.view.center);
           var prevLocation = this.view.center;
 
-          track.on("track", function () {
+          track.on('track', function () {
             var location = track.graphic.geometry;
-            console.log("track.graphic.geometry " + track.graphic.geometry);
 
             this.view
               .goTo({
@@ -104,7 +99,7 @@ export class MapSceneView extends React.Component {
                 heading: 360 - getHeading(location, prevLocation), // only applies to SceneView
               })
               .catch(function (error) {
-                if (error.name != "AbortError") {
+                if (error.name != 'AbortError') {
                   console.error(error);
                 }
               });
@@ -116,9 +111,7 @@ export class MapSceneView extends React.Component {
 
           function getHeading(point, oldPoint) {
             // get angle between two points
-            var angleInDegrees =
-              (Math.atan2(point.y - oldPoint.y, point.x - oldPoint.x) * 180) /
-              Math.PI;
+            var angleInDegrees = (Math.atan2(point.y - oldPoint.y, point.x - oldPoint.x) * 180) / Math.PI;
 
             // move heading north
             return -90 + angleInDegrees;
@@ -127,8 +120,8 @@ export class MapSceneView extends React.Component {
           // this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
           this.renderEsriComponent(
             Viewshed,
-            { Utils, deployments, socketio: this.socketio, track },
-            "bottom-right"
+            { Utils, deployments, socketio: this.socketio, track, userId: this.userId },
+            'bottom-right'
           );
           this.renderEsriComponent(ObjectEditor);
           this.renderEsriComponent(DayLight);
@@ -149,7 +142,7 @@ export class MapSceneView extends React.Component {
     return items.map((item) => {
       return new this.esriModules.Graphic({
         geometry: {
-          type: "point",
+          type: 'point',
           latitude: item.location.coordinates[1],
           longitude: item.location.coordinates[0],
         },
@@ -162,7 +155,7 @@ export class MapSceneView extends React.Component {
     return items.map((item) => {
       return new this.esriModules.Graphic({
         geometry: {
-          type: "polygon",
+          type: 'polygon',
           rings: [item.location.coordinates[0]],
         },
         attributes: {
@@ -174,7 +167,7 @@ export class MapSceneView extends React.Component {
 
   setUserMarkerPosition(deployments, id) {
     deployments.forEach((deploy) => {
-      if (deploy.deployId === `${id}`) deploy.tag = "User";
+      if (deploy.deployId === `${id}`) deploy.tag = 'User';
     });
   }
 
@@ -186,17 +179,15 @@ export class MapSceneView extends React.Component {
   addLayer(layers = []) {
     layers.forEach((layer) => {
       this.view.map.add(layer);
-      layer.on("apply-edits", (e) => {
+      layer.on('apply-edits', (e) => {
         //when adding new object save it to db
         if (!e.edits.addFeatures) {
           return;
         }
 
         const { attributes, geometry } = e.edits.addFeatures[0];
-        if (attributes.tag === "Building") {
-          const rings = geometry.rings[0].map((ring) =>
-            this.xyToLngLat(ring[0], ring[1])
-          );
+        if (attributes.tag === 'Building') {
+          const rings = geometry.rings[0].map((ring) => this.xyToLngLat(ring[0], ring[1]));
           const geoObject = new GeoObject(attributes, rings);
           geoObject.save();
         }
@@ -204,7 +195,7 @@ export class MapSceneView extends React.Component {
     });
   }
 
-  getLayer(layerTitle = "") {
+  getLayer(layerTitle = '') {
     return this.props.view.map.allLayers.find((layer) => {
       return layer.title === layerTitle;
     });
@@ -216,7 +207,7 @@ export class MapSceneView extends React.Component {
 
   renderEsriComponent(component, props = {}) {
     const Components = component;
-    const elm = document.createElement("div");
+    const elm = document.createElement('div');
     this.view.ui.add(elm);
     ReactDOM.render(<Components view={this.view} {...props} />, elm);
   }

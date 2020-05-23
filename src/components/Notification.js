@@ -1,19 +1,20 @@
 import { useEffect } from 'react';
 import { useToasts } from 'react-toast-notifications';
 
-export const Notification = ({ socketio }) => {
+export const Notification = ({ socketio,userId }) => {
   const { addToast } = useToasts();
 
   useEffect(() => {
     // socketio.on('NOTIFICATION', showWarningToast);
-    socketio.on('ENEMY_CLOSER_'+3, showEnemyCloser);
-    socketio.on('ENEMY_SURROUNDING_'+3, showEnemySurrounding);
-    socketio.on('ASSIST_FRIENDLY_1', showAssist);
+    socketio.on('NOTIFICATION', showWarningToast);
+    socketio.on('ENEMY_CLOSER_' + userId, showEnemyCloser);
+    socketio.on('ENEMY_SURROUNDING_' + userId, showEnemySurrounding);
+    socketio.on('ASSIST_FRIENDLY_'+ userId, showAssist);
   }, []);
 
-  // const showWarningToast = async ({ content, type }) => {
-  //   addToast('ENEMY CLOSER!', { appearance: 'info', autoDismiss: true });
-  // };
+  const showWarningToast = async ({ content, type }) => {
+    addToast(`${content}`, { appearance: type, autoDismiss: true });
+  };
 
   const showEnemyCloser = async ({ content, type }) => {
     addToast('ENEMY CLOSER!', { appearance: 'warning', autoDismiss: true });
