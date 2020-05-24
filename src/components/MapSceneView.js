@@ -5,11 +5,13 @@ import { LineOfSight } from './LineOfSight';
 import { Viewshed } from './Viewshed';
 import { DayLight } from './DayLight';
 import { DeltaLogs } from './DeltaLogs';
+import { WeatherSec } from './weatherSection';
 import { deployLayerOpt } from '../layers/deployLayer';
 import { objectLayerOpt } from '../layers/objectLayer';
 import { ObjectEditor } from './ObjectEditor';
 import { getDeployments } from '../api/getDeployments';
 import { getDeltas } from '../api/getDeltas';
+import { getWeather } from '../api/getWeather';
 import { getGeoObjects } from '../api/getGeoObjects';
 import { deployMarkers } from '../markers/deploy';
 import GeoObject from '../schema/GeoObject';
@@ -73,10 +75,11 @@ export class MapSceneView extends React.Component {
           useHeadingEnabled: false, // Don't change orientation of the map
         });
 
-        const [deployments, objects, deltas] = await Promise.all([
+        const [deployments, objects, deltas, forcast] = await Promise.all([
           getDeployments(),
           getGeoObjects(),
           getDeltas(this.userId),
+          getWeather()
         ]);
         this.setUserMarkerPosition(deployments, this.userId);
         const deployGraphics = this.createDeployGraphics(deployments);
@@ -126,6 +129,7 @@ export class MapSceneView extends React.Component {
           this.renderEsriComponent(ObjectEditor);
           this.renderEsriComponent(DayLight);
           this.renderEsriComponent(DeltaLogs, { deltas });
+          this.renderEsriComponent(WeatherSec, { forcast });
         });
       })
       .catch((e) => console.log(e));
