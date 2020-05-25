@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { loadModules } from 'esri-loader';
 
+const COLORS = { ENEMY_CLOSER: 'yellow', ENEMY_SURROUNDING: 'red', ASSIST_FRIENDLY: 'blue' };
+
 export class DeltaLogs extends React.Component {
   constructor() {
     super();
@@ -12,16 +14,33 @@ export class DeltaLogs extends React.Component {
       css: false,
     }).then(async ([Expand]) => {
       const expand = new Expand({
-        expandIconClass: 'esri-icon-key',
+        expandIconClass: 'esri-icon-duplicate',
         expandTooltip: 'Expand DeltaLogs widget',
         view: this.props.view,
         content: document.getElementById('logsContent'),
         expanded: false,
       });
       this.props.view.ui.add(expand, 'top-right');
+
+      this.props.socketio.on('NOTIFICATION', this.addLogsToWidget);
+      this.props.socketio.on('ENEMY_CLOSER_' + this.props.userId, (log) =>
+        this.addLogsToWidget(log, 'ENEMY_CLOSER')
+      );
+      this.props.socketio.on('ENEMY_SURROUNDING_' + this.props.userId, (log) =>
+        this.addLogsToWidget(log, 'ENEMY_SURROUNDING')
+      );
+      this.props.socketio.on('ASSIST_FRIENDLY_' + this.props.userId, (log) =>
+        this.addLogsToWidget(log, 'ASSIST_FRIENDLY')
+      );
+
       this.deltasLogs = this.props.deltas;
       this.forceUpdate();
     });
+  }
+
+  addLogsToWidget(log, type) {
+    this.deltasLogs.unshift({ message: type, timestamp: log.timestamp });
+    this.forceUpdate();
   }
 
   render() {
@@ -49,9 +68,14 @@ export class DeltaLogs extends React.Component {
           {this.deltasLogs.map((value, index) => {
             let time = new Date(value.timestamp);
             return (
-              <div style={{ margin: '4px' }} id={value._id}>
-                <h4 key={index}>{value.message}</h4>
-                <h5>
+              <div
+                style={{ margin: '4px', marginBottom: '20px', color: COLORS[value.message] }}
+                id={value._id}
+              >
+                <h4 style={{ margin: '0' }} key={index}>
+                  {value.message}
+                </h4>
+                <h5 style={{ margin: '0' }}>
                   {time.toDateString()} --- {time.getUTCHours()}:{time.getMinutes()}
                 </h5>
               </div>
