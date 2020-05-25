@@ -71,10 +71,9 @@ export class DeltaLogs extends React.Component {
               <div
                 style={{ margin: '4px', marginBottom: '20px', color: COLORS[value.message] }}
                 id={value._id}
+                key={index}
               >
-                <h4 style={{ margin: '0' }} key={index}>
-                  {value.message}
-                </h4>
+                <h4 style={{ margin: '0' }}>{value.message}</h4>
                 <h5 style={{ margin: '0' }}>
                   {time.toDateString()} --- {time.getUTCHours()}:{time.getMinutes()}
                 </h5>
