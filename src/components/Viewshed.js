@@ -3,14 +3,14 @@ import { loadModules } from 'esri-loader';
 import uniqBy from 'lodash.uniqby';
 import { viewshedMarker } from '../markers/viewshed';
 import { circleMarker } from '../markers/circle';
-import axios from 'axios';
 
 import viewshedMocks1 from '../resources/mocks/viewshed-1.json';
 import viewshedMocks2 from '../resources/mocks/viewshed-2.json';
 import viewshedMocks3 from '../resources/mocks/viewshed-3.json';
 import viewshedMocks4 from '../resources/mocks/viewshed-4.json';
+import viewshedMocks5 from '../resources/mocks/viewshed-5.json';
 
-var viewshedArr = [viewshedMocks4, viewshedMocks4, viewshedMocks3, viewshedMocks2, viewshedMocks1];
+var viewshedArr = [viewshedMocks5, viewshedMocks4, viewshedMocks3, viewshedMocks2, viewshedMocks1];
 var geolocate = require('mock-geolocation');
 
 // const USER_ID = 3;
@@ -104,7 +104,7 @@ export class Viewshed extends Component {
         this.props.view.when(async () => {
           // const { features: enemyDeploys } = await this.queryEnemies();
           // const result = await this.calcViewshed(enemyDeploys);
-          const result = viewshedArr[3];
+          const result = viewshedArr[4];
           await this.drawViewshed(result);
 
           geolocate.change({
