@@ -1,8 +1,8 @@
 import { Component } from 'react';
 import { loadModules } from 'esri-loader';
-import uniqBy from 'lodash.uniqby';
 import { viewshedMarker } from '../markers/viewshed';
 import { circleMarker } from '../markers/circle';
+//import axios from 'axios';
 
 import viewshedMocks1 from '../resources/mocks/viewshed-1.json';
 import viewshedMocks2 from '../resources/mocks/viewshed-2.json';
@@ -10,10 +10,28 @@ import viewshedMocks3 from '../resources/mocks/viewshed-3.json';
 import viewshedMocks4 from '../resources/mocks/viewshed-4.json';
 import viewshedMocks5 from '../resources/mocks/viewshed-5.json';
 
-var viewshedArr = [viewshedMocks5, viewshedMocks4, viewshedMocks3, viewshedMocks2, viewshedMocks1];
+import viewshedMocks6 from '../resources/mocks/viewsheds/viewshed-01.json';
+import viewshedMocks7 from '../resources/mocks/viewsheds/viewshed-02.json';
+import viewshedMocks8 from '../resources/mocks/viewsheds/viewshed-03.json';
+import viewshedMocks9 from '../resources/mocks/viewsheds/viewshed-04.json';
+import viewshedMocks10 from '../resources/mocks/viewsheds/viewshed-05.json';
+
+var viewshedArr = [
+  viewshedMocks10,
+  viewshedMocks9,
+  viewshedMocks8,
+  viewshedMocks7,
+  viewshedMocks6,
+  viewshedMocks5,
+  viewshedMocks4,
+  viewshedMocks3,
+  viewshedMocks2,
+  viewshedMocks1,
+];
+
+// var viewshedArr = [viewshedMocks10, viewshedMocks9, viewshedMocks8, viewshedMocks7, viewshedMocks6];
 var geolocate = require('mock-geolocation');
 
-// const USER_ID = 3;
 const gpUrl =
   'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed';
 
@@ -27,8 +45,10 @@ export class Viewshed extends Component {
     this.graphicsLayer = {};
     this.gp = {};
     this.currUserPos = null;
+    this.userCircleGraphic = null;
     this.userRadius = 3;
     this.viewshed = null;
+    this.isEnemyHighlight = false;
 
     this.createUserCircleGraphic = this.createUserCircleGraphic.bind(this);
     this.getViewshedInsideCircle = this.getViewshedInsideCircle.bind(this);
@@ -40,7 +60,11 @@ export class Viewshed extends Component {
     this.queryEnemies = this.queryEnemies.bind(this);
     this.sendLocation = this.sendLocation.bind(this);
     this.drawViewshed = this.drawViewshed.bind(this);
-    this.queryById = this.queryById.bind(this);
+    this.createDeployGraphic = this.createDeployGraphic.bind(this);
+    this.queryByDeployId = this.queryByDeployId.bind(this);
+    this.queryByObjectId = this.queryByObjectId.bind(this);
+    this.highlightEnemyViewshed = this.highlightEnemyViewshed.bind(this);
+    this.getUserCircleGraphic = this.getUserCircleGraphic.bind(this);
   }
 
   componentDidMount() {
@@ -84,8 +108,8 @@ export class Viewshed extends Component {
         this.graphicsLayer = new GraphicsLayer();
         this.props.view.map.add(this.graphicsLayer);
         this.props.socketio.on('SEND_LOCATION', this.updateDeploys);
-        this.props.view.on('click', this.sendLocation);
-
+        // this.props.view.on('click', this.sendLocation);
+        this.props.view.on('click', this.highlightEnemyViewshed);
         const user = await this.queryCurrentUser();
         const [x, y] = this.props.Utils.lngLatToXY(
           user.features[0].geometry.longitude,
@@ -102,15 +126,18 @@ export class Viewshed extends Component {
         this.gp.outSpatialReference = { wkid: 102100 };
 
         this.props.view.when(async () => {
-          // const { features: enemyDeploys } = await this.queryEnemies();
-          // const result = await this.calcViewshed(enemyDeploys);
-          const result = viewshedArr[4];
-          await this.drawViewshed(result);
-
+          //update camera position to user current position
           geolocate.change({
             lng: this.currUserPos.longitude,
             lat: this.currUserPos.latitude,
           });
+
+          //const { features: enemyDeploys } = await this.queryEnemies();
+          //const result = await this.calcViewshed(enemyDeploys);
+          this.userCircleGraphic = await this.getUserCircleGraphic();
+          this.viewshed = viewshedArr[9];
+          // const result = viewshedArr[9];
+          await this.drawViewshed(this.viewshed);
         });
       }
     );
@@ -125,13 +152,22 @@ export class Viewshed extends Component {
     return res;
   }
 
-  async queryById(deployId) {
+  async queryByDeployId(deployId) {
     const res = await this.deployLayer.queryFeatures({
       where: `deployId = '${deployId}'`,
       outFields: ['*'],
       returnGeometry: true,
     });
     return res;
+  }
+
+  async queryByObjectId(objectId) {
+    const { features } = await this.deployLayer.queryFeatures({
+      where: `OBJECTID = ${objectId}`,
+      outFields: ['*'],
+      returnGeometry: true,
+    });
+    return features[0];
   }
 
   async queryCurrentUser() {
@@ -147,7 +183,6 @@ export class Viewshed extends Component {
   async updateDeployPosition(deploy) {
     const deployId = deploy.deployId;
     if (deployId == this.props.userId) {
-      console.log('update user position');
       const lon = deploy.location.coordinates[0];
       const lat = deploy.location.coordinates[1];
       const [x, y] = this.props.Utils.lngLatToXY(lon, lat);
@@ -157,9 +192,18 @@ export class Viewshed extends Component {
         x,
         y,
       };
+      this.userCircleGraphic = await this.getUserCircleGraphic();
     }
 
-    let deployToUpdate = await this.queryById(deployId);
+    let deployToUpdate = await this.queryByDeployId(deployId);
+    //add new deploy feature to deploy layer
+    if (deployToUpdate.features.length === 0) {
+      const deployGraphic = this.createDeployGraphic(deploy);
+      const edits = { addFeatures: [deployGraphic] };
+      await this.deployLayer.applyEdits(edits);
+      deployToUpdate = await this.queryByDeployId(deployId);
+    }
+
     deployToUpdate = deployToUpdate.features[0];
     deployToUpdate.geometry['latitude'] = deploy.location.coordinates[1];
     deployToUpdate.geometry['longitude'] = deploy.location.coordinates[0];
@@ -177,19 +221,17 @@ export class Viewshed extends Component {
       );
 
       const edits = { updateFeatures: deploysToUpdate };
-      const { features: enemyDeploys } = await this.queryEnemies();
+      //const { features: enemyDeploys } = await this.queryEnemies();
       const enemiesToUpdates = deploysToUpdate.filter((deploy) => deploy.attributes.deployType === 'Enemy');
-      const enemiesSet = uniqBy([...enemiesToUpdates, ...enemyDeploys], 'attributes.deployId');
+      // const enemiesSet = uniqBy([...enemiesToUpdates, ...enemyDeploys], 'attributes.deployId');
 
-      let viewshedToDraw = null;
       console.log('enemiesToUpdates.length ' + enemiesToUpdates.length);
       if (enemiesToUpdates.length > 0) {
-        viewshedToDraw = await this.calcViewshed(enemiesSet);
-      } else {
-        viewshedToDraw = this.viewshed;
+        // viewshedToDraw = await this.calcViewshed(enemiesSet);
+        this.viewshed = await this.calcViewshed(enemiesToUpdates);
       }
 
-      await this.drawViewshed(viewshedToDraw);
+      await this.drawViewshed(this.viewshed);
       await this.deployLayer.applyEdits(edits);
 
       geolocate.change({
@@ -199,6 +241,17 @@ export class Viewshed extends Component {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  createDeployGraphic(item) {
+    return new this.esriModules.Graphic({
+      geometry: {
+        type: 'point',
+        latitude: item.location.coordinates[1],
+        longitude: item.location.coordinates[0],
+      },
+      attributes: { ...item },
+    });
   }
 
   createGraphicContainer(items) {
@@ -217,19 +270,23 @@ export class Viewshed extends Component {
   }
 
   async drawViewshed(items) {
+    //this.userCircleGraphic = this.getUserCircleGraphic()
     const userCircle = await this.getUserCircle();
-    const userCircleGraphic = await this.createUserCircleGraphic(userCircle);
+    //const userCircleGraphic = await this.createUserCircleGraphic(userCircle);
+    //this.userCircleGraphic = await this.createUserCircleGraphic(userCircle);
+
     if (items) {
-      // const viewshedPoints = items[0].value.features;
+      //save viedshed inside user radius circle
+      //const viewshedPoints = items[0].value.features;
       const viewshedPoints = items;
       viewshedPoints.forEach((viewshedPoint) => (viewshedPoint.geometry.type = 'polygon'));
-      const viewshedInsideCircle = this.getViewshedInsideCircle(viewshedPoints, userCircle);
+      this.viewshed = this.getViewshedInsideCircle(viewshedPoints, userCircle);
       this.graphicsLayer.removeAll(); //remove prev viewshed from map
-      this.graphicsLayer.addMany(viewshedInsideCircle);
+      this.graphicsLayer.addMany(this.viewshed);
     } else {
       this.graphicsLayer.removeAll(); //remove prev viewshed from map
     }
-    this.graphicsLayer.add(userCircleGraphic);
+    this.graphicsLayer.add(this.userCircleGraphic);
     geolocate.change({
       lng: this.currUserPos.longitude,
       lat: this.currUserPos.latitude,
@@ -237,8 +294,6 @@ export class Viewshed extends Component {
   }
 
   async getUserCircle() {
-    // const user = await this.queryCurrentUser();
-    // const { x, y } = user.features[0].geometry;
     const { x, y } = this.currUserPos;
     const point = new this.esriModules.Point({
       x,
@@ -310,20 +365,63 @@ export class Viewshed extends Component {
       console.log('calling calcViewshed()...');
       // const inputGraphicContainer = this.createGraphicContainer(features);
       // const featureSet = this.createFeatureSet(inputGraphicContainer);
-      // const { results } = await this.gp.execute(featureSet);
+
+      // let stop = 0;
+      // let result = {};
+      // while (stop < 10) {
+      //   try {
+      //     result = await this.gp.execute(featureSet);
+      //     stop = 10;
+      //   } catch (error) {
+      //     console.log('not get viewshed');
+      //     stop++;
+      //   }
+      // }
+
       //pop viewshed
       let results = viewshedArr.pop();
 
       // if (process.env.REACT_APP_MOCK) {
-      //   await axios.post('http://localhost:8081/save', { data: results[0].value.features });
+      //   await axios.post('http://localhost:8081/save', { data: result.results[0].value.features });
       // }
 
       this.viewshed = results;
+      // return result.results;
       return results;
     } catch (error) {
       console.error(error);
       return null;
     }
+  }
+
+  async highlightEnemyViewshed(event) {
+    this.props.view.hitTest(event.screenPoint).then(async ({ results = null }) => {
+      const highlightObject =
+        results && results[0] && results[0].graphic.attributes ? results[0].graphic.attributes : {};
+      const isEnemyHighlight = results.length === 0 || highlightObject.deployType !== 'Enemy' ? false : true;
+
+      if (isEnemyHighlight) {
+        //show highlight enemy viewshed
+        console.log('show highlight enemy viewshed...');
+        const enemyDeploy = await this.queryByObjectId(highlightObject.OBJECTID);
+        this.graphicsLayer.removeAll();
+        this.graphicsLayer.addMany(viewshedArr[9]);
+        this.graphicsLayer.add(this.userCircleGraphic);
+        return;
+      }
+      //show viewshed inside circle if enemy is not highlight
+      console.log('show user viewshed...');
+      this.graphicsLayer.removeAll(); //remove prev viewshed from map
+      this.graphicsLayer.addMany(this.viewshed);
+      this.graphicsLayer.add(this.userCircleGraphic);
+      return;
+    });
+  }
+
+  async getUserCircleGraphic() {
+    const userCircle = await this.getUserCircle();
+    const userCircleGraphic = await this.createUserCircleGraphic(userCircle);
+    return userCircleGraphic;
   }
 
   async sendLocation(event) {
