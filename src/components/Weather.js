@@ -6,6 +6,16 @@ export class Weather extends Component {
   constructor() {
     super();
     this.weatherInfo = {};
+
+    this.mediaQuery = {
+      desktop: 1200,
+      tablet: 768,
+      phone: 576,
+    };
+
+    this.state = {
+      windowWidth: window.innerWidth,
+    };
   }
 
   componentDidMount() {
@@ -30,16 +40,27 @@ export class Weather extends Component {
     return (
       <div
         style={{
-          width: "400px",
-          height: "400px",
+          width:
+            this.state.windowWidth > this.mediaQuery.phone ? "400px" : "280px",
+          height:
+            this.state.windowWidth > this.mediaQuery.phone ? "400px" : "500px",
           padding: "5px",
           backgroundColor: "black",
           opacity: "70%",
         }}
         id="weather"
       >
-        <h2 style={{ textAlign: "center" }}>Weather Information</h2>
-        <div style={{ margin: "10px", padding: "10px" }}>
+        <h2
+          style={{
+            textAlign:
+              this.state.windowWidth > this.mediaQuery.phone
+                ? "center"
+                : "left",
+          }}
+        >
+          Weather Information
+        </h2>
+        <div style={{ margin: "5px", padding: "5px" }}>
           <h3>Humidity: {this.weatherInfo.Humidity}%</h3>
           <h3>
             <i
