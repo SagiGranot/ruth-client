@@ -12,6 +12,16 @@ export class DeltaLogs extends React.Component {
   constructor() {
     super();
     this.deltasLogs = [];
+
+    this.mediaQuery = {
+      desktop: 1200,
+      tablet: 768,
+      phone: 576,
+    };
+
+    this.state = {
+      windowWidth: window.innerWidth,
+    };
   }
 
   componentDidMount() {
@@ -39,6 +49,10 @@ export class DeltaLogs extends React.Component {
       );
 
       this.deltasLogs = this.props.deltas;
+      window.addEventListener("resize", () => {
+        this.setState({ windowWidth: document.body.clientWidth });
+      });
+
       this.forceUpdate();
     });
   }
@@ -52,7 +66,8 @@ export class DeltaLogs extends React.Component {
     return (
       <div
         style={{
-          width: "400px",
+          width:
+            this.state.windowWidth > this.mediaQuery.phone ? "400px" : "280px",
           height: "400px",
           padding: "5px",
           margin: "0",
@@ -71,7 +86,9 @@ export class DeltaLogs extends React.Component {
           }}
         >
           {this.deltasLogs.map((value, index) => {
-            let time = new Date(value.timestamp);
+            const time = value.timestamp
+              ? new Date(value.timestamp)
+              : new Date(Date.now());
             return (
               <div
                 style={{
@@ -80,7 +97,7 @@ export class DeltaLogs extends React.Component {
                   // color: COLORS[value.message],
                   display: "flex",
                   margin: "4px 4px 20px",
-                  justifyContent: "space-evenly",
+                  //justifyContent: "space-evenly",
                   alignItems: "center",
                 }}
                 id={value._id}
@@ -88,7 +105,7 @@ export class DeltaLogs extends React.Component {
               >
                 <div
                   style={{
-                    margin: "0px",
+                    margin: "10px",
                     backgroundColor: COLORS[value.message],
                     width: "10px",
                     height: "10px",
@@ -97,8 +114,26 @@ export class DeltaLogs extends React.Component {
                   }}
                 ></div>
 
-                <h4 style={{ margin: "0" }}>{value.message}</h4>
-                <h5 style={{ margin: "0" }}>
+                <h4
+                  style={{
+                    margin: "0",
+                    display:
+                      this.state.windowWidth > this.mediaQuery.phone
+                        ? "block"
+                        : "inline",
+                  }}
+                >
+                  {value.message}
+                </h4>
+                <h5
+                  style={{
+                    margin: "10px",
+                    display:
+                      this.state.windowWidth > this.mediaQuery.phone
+                        ? "inline"
+                        : "block",
+                  }}
+                >
                   {time.toDateString()} --- {time.getUTCHours()}:
                   {time.getMinutes()}
                 </h5>
