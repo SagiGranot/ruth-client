@@ -8,7 +8,7 @@ export class DayLight extends Component {
     }).then(async ([Daylight, Expand]) => {
       const daylightWidget = new Daylight({
         view: this.props.view,
-        playSpeedMultiplier: 0.2,
+        playSpeedMultiplier: 0.02,
         visibleElements: {
           timezone: false,
           datePicker: false,

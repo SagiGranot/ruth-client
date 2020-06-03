@@ -4,17 +4,29 @@ import { viewshedMarker } from '../markers/viewshed';
 import { circleMarker } from '../markers/circle';
 //import axios from 'axios';
 
-import viewshedMocks1 from '../resources/mocks/viewshed-1.json';
-import viewshedMocks2 from '../resources/mocks/viewshed-2.json';
-import viewshedMocks3 from '../resources/mocks/viewshed-3.json';
-import viewshedMocks4 from '../resources/mocks/viewshed-4.json';
-import viewshedMocks5 from '../resources/mocks/viewshed-5.json';
+import enemy7_0 from '../resources/mocks/viewsheds/enemies/viewshed-1.json';
+import enemy10_0 from '../resources/mocks/viewsheds/enemies/viewshed-2.json';
+import enemy5_0 from '../resources/mocks/viewsheds/enemies/viewshed-3.json';
+import enemy5_1 from '../resources/mocks/viewsheds/enemies/viewshed-4.json';
 
-import viewshedMocks6 from '../resources/mocks/viewsheds/viewshed-01.json';
-import viewshedMocks7 from '../resources/mocks/viewsheds/viewshed-02.json';
-import viewshedMocks8 from '../resources/mocks/viewsheds/viewshed-03.json';
-import viewshedMocks9 from '../resources/mocks/viewsheds/viewshed-04.json';
-import viewshedMocks10 from '../resources/mocks/viewsheds/viewshed-05.json';
+import enemy7_1 from '../resources/mocks/viewsheds/enemies/viewshed-7.json';
+import enemy5_2 from '../resources/mocks/viewsheds/enemies/viewshed-8.json';
+import enemy10_1 from '../resources/mocks/viewsheds/enemies/viewshed-9.json';
+import enemy7_2 from '../resources/mocks/viewsheds/enemies/viewshed-10.json';
+import enemy5_3 from '../resources/mocks/viewsheds/enemies/viewshed-11.json';
+import enemy10_2 from '../resources/mocks/viewsheds/enemies/viewshed-12.json';
+import enemy7_3 from '../resources/mocks/viewsheds/enemies/viewshed-13.json';
+
+import viewshedMocks1 from '../resources/mocks/viewsheds/viewshed1-1.json';
+import viewshedMocks2 from '../resources/mocks/viewsheds/viewshed1-1_2.json';
+import viewshedMocks3 from '../resources/mocks/viewsheds/viewshed1-1_2_3.json';
+import viewshedMocks4 from '../resources/mocks/viewsheds/viewshed1-1_2_4.json';
+
+import viewshedMocks6 from '../resources/mocks/viewsheds/viewshed2-01.json';
+import viewshedMocks7 from '../resources/mocks/viewsheds/viewshed2-02.json';
+import viewshedMocks8 from '../resources/mocks/viewsheds/viewshed2-03.json';
+import viewshedMocks9 from '../resources/mocks/viewsheds/viewshed2-04.json';
+import viewshedMocks10 from '../resources/mocks/viewsheds/viewshed2-05.json';
 
 var viewshedArr = [
   viewshedMocks10,
@@ -22,14 +34,27 @@ var viewshedArr = [
   viewshedMocks8,
   viewshedMocks7,
   viewshedMocks6,
-  viewshedMocks5,
   viewshedMocks4,
   viewshedMocks3,
   viewshedMocks2,
   viewshedMocks1,
 ];
 
-// var viewshedArr = [viewshedMocks10, viewshedMocks9, viewshedMocks8, viewshedMocks7, viewshedMocks6];
+let enemiesViewsheds = {
+  '7': {
+    viewsheds: [enemy7_0, enemy7_1, enemy7_2, enemy7_3],
+    moveCounter: -1,
+  },
+  '10': {
+    viewsheds: [enemy10_0, enemy10_1, enemy10_2],
+    moveCounter: -1,
+  },
+  '5': {
+    viewsheds: [enemy5_0, enemy5_1, enemy5_2, enemy5_3],
+    moveCounter: -1,
+  },
+};
+
 var geolocate = require('mock-geolocation');
 
 const gpUrl =
@@ -48,6 +73,7 @@ export class Viewshed extends Component {
     this.userCircleGraphic = null;
     this.userRadius = 3;
     this.viewshed = null;
+    this.viewshedInCircle = null;
     this.isEnemyHighlight = false;
 
     this.createUserCircleGraphic = this.createUserCircleGraphic.bind(this);
@@ -65,6 +91,7 @@ export class Viewshed extends Component {
     this.queryByObjectId = this.queryByObjectId.bind(this);
     this.highlightEnemyViewshed = this.highlightEnemyViewshed.bind(this);
     this.getUserCircleGraphic = this.getUserCircleGraphic.bind(this);
+    this.getEnemyViewshed = this.getEnemyViewshed.bind(this);
   }
 
   componentDidMount() {
@@ -108,7 +135,7 @@ export class Viewshed extends Component {
         this.graphicsLayer = new GraphicsLayer();
         this.props.view.map.add(this.graphicsLayer);
         this.props.socketio.on('SEND_LOCATION', this.updateDeploys);
-        // this.props.view.on('click', this.sendLocation);
+        this.props.view.on('click', this.sendLocation);
         this.props.view.on('click', this.highlightEnemyViewshed);
         const user = await this.queryCurrentUser();
         const [x, y] = this.props.Utils.lngLatToXY(
@@ -136,7 +163,6 @@ export class Viewshed extends Component {
           //const result = await this.calcViewshed(enemyDeploys);
           this.userCircleGraphic = await this.getUserCircleGraphic();
           this.viewshed = viewshedArr[9];
-          // const result = viewshedArr[9];
           await this.drawViewshed(this.viewshed);
         });
       }
@@ -182,6 +208,11 @@ export class Viewshed extends Component {
 
   async updateDeployPosition(deploy) {
     const deployId = deploy.deployId;
+
+    if (enemiesViewsheds[deployId]) {
+      enemiesViewsheds[deployId].moveCounter++;
+    }
+
     if (deployId == this.props.userId) {
       const lon = deploy.location.coordinates[0];
       const lat = deploy.location.coordinates[1];
@@ -280,9 +311,9 @@ export class Viewshed extends Component {
       //const viewshedPoints = items[0].value.features;
       const viewshedPoints = items;
       viewshedPoints.forEach((viewshedPoint) => (viewshedPoint.geometry.type = 'polygon'));
-      this.viewshed = this.getViewshedInsideCircle(viewshedPoints, userCircle);
+      this.viewshedInCircle = this.getViewshedInsideCircle(viewshedPoints, userCircle);
       this.graphicsLayer.removeAll(); //remove prev viewshed from map
-      this.graphicsLayer.addMany(this.viewshed);
+      this.graphicsLayer.addMany(this.viewshedInCircle);
     } else {
       this.graphicsLayer.removeAll(); //remove prev viewshed from map
     }
@@ -395,6 +426,7 @@ export class Viewshed extends Component {
   }
 
   async highlightEnemyViewshed(event) {
+    let viewshed = this.viewshedInCircle;
     this.props.view.hitTest(event.screenPoint).then(async ({ results = null }) => {
       const highlightObject =
         results && results[0] && results[0].graphic.attributes ? results[0].graphic.attributes : {};
@@ -404,17 +436,17 @@ export class Viewshed extends Component {
         //show highlight enemy viewshed
         console.log('show highlight enemy viewshed...');
         const enemyDeploy = await this.queryByObjectId(highlightObject.OBJECTID);
-        this.graphicsLayer.removeAll();
-        this.graphicsLayer.addMany(viewshedArr[9]);
-        this.graphicsLayer.add(this.userCircleGraphic);
-        return;
+        debugger;
+        const enemyDeployId = enemyDeploy.attributes.deployId;
+        let enemyViewshed = this.getEnemyViewshed(enemyDeployId);
+        enemyViewshed.forEach((viewshedPoint) => (viewshedPoint.geometry.type = 'polygon'));
+        viewshed = enemyViewshed;
       }
       //show viewshed inside circle if enemy is not highlight
       console.log('show user viewshed...');
-      this.graphicsLayer.removeAll(); //remove prev viewshed from map
-      this.graphicsLayer.addMany(this.viewshed);
+      this.graphicsLayer.removeAll();
+      this.graphicsLayer.addMany(viewshed);
       this.graphicsLayer.add(this.userCircleGraphic);
-      return;
     });
   }
 
@@ -426,6 +458,11 @@ export class Viewshed extends Component {
 
   async sendLocation(event) {
     console.log(event.mapPoint);
+  }
+
+  getEnemyViewshed(enemyDeployId) {
+    const moveCounter = enemiesViewsheds[enemyDeployId].moveCounter;
+    return enemiesViewsheds[enemyDeployId].viewsheds[moveCounter];
   }
 
   render() {

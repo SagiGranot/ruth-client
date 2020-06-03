@@ -114,7 +114,7 @@ const deployMarkers = {
     },
   },
   EnemyHuman: {
-    value: 'Enemy, Human',
+    value: 'EnemyHuman, Human',
     symbol: {
       type: 'point-3d',
       symbolLayers: [
