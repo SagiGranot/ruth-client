@@ -14,26 +14,42 @@ export const Notification = ({ socketio, userId }) => {
   }, []);
 
   const showWarningToast = async ({ content, type }) => {
+    console.log(content);
     addToast(`${content}`, { appearance: type, autoDismiss: true });
   };
 
   const showEnemyCloser = async ({ content, type }) => {
-    addToast("ENEMY CLOSER!", { appearance: "warning", autoDismiss: true });
+    console.log(content);
+    addToast(
+      `ENEMY ${content.data.deployId} CLOSER FROM ${content.data.bearing} ! `,
+      {
+        appearance: "warning",
+        autoDismiss: true,
+      }
+    );
   };
 
   const showEnemySurrounding = async ({ content, type }) => {
-    //
-    addToast("ENEMY SURROUNDING!", { appearance: "error", autoDismiss: true });
+    console.log(content);
+    addToast(`ENEMY SURROUNDING in ${content.data.deployId}!`, {
+      appearance: "error",
+      autoDismiss: true,
+    });
   };
 
   const showSuspectBuilding = async ({ content, type }) => {
-    //
-    addToast("SUSPECT BUILDING", { appearance: "info", autoDismiss: true });
+    console.log(content);
+    content.data.forEach((building) => {
+      addToast(`SUSPECT BUILDING ${building.deployId}`, {
+        appearance: "info",
+        autoDismiss: true,
+      });
+    });
   };
 
   const showAssist = async ({ content, type }) => {
-    //
-    addToast("ASSIST FRIENDLY ALPHA", {
+    console.log(content);
+    addToast(`ASSIST FRIENDLY ALPHA ${content.data.deployId}`, {
       appearance: "success",
       autoDismiss: true,
     });
