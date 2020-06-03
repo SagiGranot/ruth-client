@@ -1,19 +1,18 @@
 .webmap {
-  height: 90vh;
+  height: 95vh;
 }
 
-.App{
-  height:100%;
+.App {
+  height: 100%;
 }
 
-#rightContainer{
+#rightContainer {
   /* position: absolute; */
   box-shadow: none;
   display: flex;
   flex-direction: column;
   justify-items: center;
   align-items: center;
-
 }
 /* overview */
 #overviewDiv {
@@ -52,7 +51,6 @@
   background-color: rgba(100, 100, 100, 0.8);
   border: 2px solid #ccc;
 }
-
 
 /* footer */
 

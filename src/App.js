@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import socketIOClient from 'socket.io-client';
 import { Header } from './components/Header';
 import './resources/style/Style.css';
@@ -18,7 +18,7 @@ const App = () => {
       <ToastProvider components={{ Toast: CustomToast }} placement="bottom-right">
         <Notification socketio={socketio} userId={userId} />
         <MapSceneView socketio={socketio} userId={userId} />
-        <footer />
+        {/* <footer /> */}
       </ToastProvider>
     </div>
   );
