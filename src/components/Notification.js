@@ -24,7 +24,7 @@ export const Notification = ({ socketio, userId }) => {
 
   const showEnemyCloser = async ({ enemy, bearing }) => {
     let degree = parseInt(bearing, 10);
-    addToast(`ENEMY APPROACHE FROM `, {
+    addToast(`ENEMY ${enemy} APPROACHE FROM `, {
       appearance: 'warning',
       autoDismiss: true,
       bearing: degree,
