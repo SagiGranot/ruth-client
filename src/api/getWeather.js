@@ -25,7 +25,7 @@ async function getForcast1() {
 async function getForcast2() {
   const { data: forcast2 } = await axios({
     method: 'post',
-    url: 'http://localhost:8080/weather',
+    url: 'https://fierce-everglades-47378.herokuapp.com/weather',
     headers: {},
     data: {
       lat: '31.021588290005162',
