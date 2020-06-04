@@ -19,13 +19,10 @@ export const Notification = ({ socketio, userId }) => {
   }, []);
 
   const showWarningToast = async ({ content, type }) => {
-    console.log(content);
     addToast(`${content}`, { appearance: type, autoDismiss: true });
   };
 
   const showEnemyCloser = async ({ enemy, bearing }) => {
-    console.log(bearing);
-    console.log(enemy);
     let degree = parseInt(bearing, 10);
     addToast(`ENEMY APPROACHE FROM `, {
       appearance: 'warning',
@@ -35,7 +32,6 @@ export const Notification = ({ socketio, userId }) => {
   };
 
   const showEnemySurrounding = async ({ surrounded, area }) => {
-    console.log(surrounded, area);
     addToast(`ENEMY SURROUNDING in ${area / 1000} !`, {
       appearance: 'error',
       autoDismiss: true,
@@ -43,7 +39,6 @@ export const Notification = ({ socketio, userId }) => {
   };
 
   const showSuspectBuilding = async ({ content, type }) => {
-    console.log(content);
     content.data.forEach((building) => {
       addToast(`SUSPECT BUILDING -- `, {
         appearance: 'info',
@@ -53,7 +48,6 @@ export const Notification = ({ socketio, userId }) => {
   };
 
   const showAssist = async ({ content, type }) => {
-    console.log(content);
     addToast(`ASSIST FRIENDLY ALPHA ${content.data.deployId}`, {
       appearance: 'success',
       autoDismiss: true,

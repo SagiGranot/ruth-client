@@ -3,7 +3,6 @@ import { DefaultToast } from 'react-toast-notifications';
 
 export const CustomToast = ({ children, ...props }) => {
   const mystyle = () => {
-    console.log(props);
     return {
       transform: `rotate(${props.bearing}deg)`,
       width: '25px',
