@@ -1,16 +1,21 @@
-import { useEffect } from "react";
-import { useToasts } from "react-toast-notifications";
+import { useEffect } from 'react';
+import { useToasts } from 'react-toast-notifications';
+
+var img = document.createElement('img');
+img.src = '../resources/images/enemy_direction.png';
+img.style.width = '50px';
 
 export const Notification = ({ socketio, userId }) => {
   const { addToast } = useToasts();
 
   useEffect(() => {
     // socketio.on('NOTIFICATION', showWarningToast);
-    socketio.on("NOTIFICATION", showWarningToast);
-    socketio.on("ENEMY_CLOSER_" + userId, showEnemyCloser);
-    socketio.on("ENEMY_SURROUNDING_" + userId, showEnemySurrounding);
-    socketio.on("SUSPECT-BUILDING", showSuspectBuilding);
-    socketio.on("ASSIST_FRIENDLY_" + userId, showAssist);
+    socketio.on('NOTIFICATION', showWarningToast);
+    socketio.on('ENEMY_CLOSER_' + userId, showEnemyCloser);
+    socketio.on('ENEMY_SURROUNDING_' + userId, showEnemySurrounding);
+    socketio.on('SUSPECT-BUILDING', showSuspectBuilding);
+    socketio.on('ASSIST_FRIENDLY_' + userId, showAssist);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showWarningToast = async ({ content, type }) => {
@@ -21,17 +26,18 @@ export const Notification = ({ socketio, userId }) => {
   const showEnemyCloser = async ({ enemy, bearing }) => {
     console.log(bearing);
     console.log(enemy);
-    let angle = parseInt(bearing, 10);
-    addToast(`ENEMY APPROACHE FROM ${angle} degrees! `, {
-      appearance: "warning",
+    let degree = parseInt(bearing, 10);
+    addToast(`ENEMY APPROACHE FROM `, {
+      appearance: 'warning',
       autoDismiss: true,
+      bearing: degree,
     });
   };
 
   const showEnemySurrounding = async ({ surrounded, area }) => {
     console.log(surrounded, area);
     addToast(`ENEMY SURROUNDING in ${area / 1000} !`, {
-      appearance: "error",
+      appearance: 'error',
       autoDismiss: true,
     });
   };
@@ -40,7 +46,7 @@ export const Notification = ({ socketio, userId }) => {
     console.log(content);
     content.data.forEach((building) => {
       addToast(`SUSPECT BUILDING -- `, {
-        appearance: "info",
+        appearance: 'info',
         autoDismiss: true,
       });
     });
@@ -49,7 +55,7 @@ export const Notification = ({ socketio, userId }) => {
   const showAssist = async ({ content, type }) => {
     console.log(content);
     addToast(`ASSIST FRIENDLY ALPHA ${content.data.deployId}`, {
-      appearance: "success",
+      appearance: 'success',
       autoDismiss: true,
     });
   };

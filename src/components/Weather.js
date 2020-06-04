@@ -1,6 +1,6 @@
 /* eslint-disable react/react-in-jsx-scope */
-import React, { Component } from "react";
-import { loadModules } from "esri-loader";
+import React, { Component } from 'react';
+import { loadModules } from 'esri-loader';
 
 export class Weather extends Component {
   constructor() {
@@ -19,18 +19,18 @@ export class Weather extends Component {
   }
 
   componentDidMount() {
-    loadModules(["esri/widgets/Expand"], {
+    loadModules(['esri/widgets/Expand'], {
       css: true,
     }).then(async ([Expand]) => {
       const weatherWidget = new Expand({
-        expandIconClass: "esri-icon-environment-settings",
-        expandTooltip: "Expand weather widget",
+        expandIconClass: 'esri-icon-environment-settings',
+        expandTooltip: 'Expand weather widget',
         view: this.props.view,
-        content: document.getElementById("weather"),
+        content: document.getElementById('weather'),
         expanded: false,
       });
 
-      this.props.view.ui.add(weatherWidget, "top-right");
+      this.props.view.ui.add(weatherWidget, 'top-right');
       this.weatherInfo = this.props.weather;
       this.forceUpdate();
     });
@@ -40,57 +40,51 @@ export class Weather extends Component {
     return (
       <div
         style={{
-          width:
-            this.state.windowWidth > this.mediaQuery.phone ? "400px" : "280px",
-          height:
-            this.state.windowWidth > this.mediaQuery.phone ? "400px" : "500px",
-          padding: "5px",
-          backgroundColor: "black",
-          opacity: "70%",
+          width: '268px',
+          height: this.state.windowWidth > this.mediaQuery.phone ? '400px' : '500px',
+          padding: '5px',
+          backgroundColor: '#2f2f2f',
+          opacity: '85%',
         }}
         id="weather"
       >
-        <h2
+        <header
           style={{
-            textAlign:
-              this.state.windowWidth > this.mediaQuery.phone
-                ? "center"
-                : "left",
+            backgroundColor: '#242424',
+            padding: '0 11px',
+            fontSize: '16px',
+            borderBottom: '1px solid rgba(173,173,173,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            height: '56px',
           }}
         >
-          Weather Information
-        </h2>
-        <div style={{ margin: "5px", padding: "5px" }}>
-          <h3>Humidity: {this.weatherInfo.Humidity}%</h3>
-          <h3>
-            <i
-              style={{ margin: "5px" }}
-              className="fas fa-temperature-high"
-            ></i>
+          <h4 style={{ textAlign: 'center', flex: '1 1 auto', overflow: 'hidden' }}>Weather</h4>
+        </header>
+        <div style={{ margin: '5px', padding: '5px' }}>
+          <h5>Humidity: {this.weatherInfo.Humidity}%</h5>
+          <h5>
+            <i style={{ margin: '5px' }} className="fas fa-temperature-high"></i>
             High Temperature: {this.weatherInfo.HighTemperature} &#8451;
-          </h3>
-          <h3>
-            <i style={{ margin: "5px" }} className="fas fa-temperature-low"></i>
+          </h5>
+          <h5>
+            <i style={{ margin: '5px' }} className="fas fa-temperature-low"></i>
             Low Temperature: {this.weatherInfo.LowTemperature} &#8451;
-          </h3>
-          <h3>
-            <i style={{ margin: "5px" }} className="fas fa-wind"></i>Wind Speed:{" "}
-            {this.weatherInfo.WindSpeed} km/h
-          </h3>
-          <h3>
-            <i style={{ margin: "5px" }} className="fas fa-cloud-sun"></i>
+          </h5>
+          <h5>
+            <i style={{ margin: '5px' }} className="fas fa-wind"></i>Wind Speed: {this.weatherInfo.WindSpeed}{' '}
+            km/h
+          </h5>
+          <h5>
+            <i style={{ margin: '5px' }} className="fas fa-cloud-sun"></i>
             Sunrise: {this.weatherInfo.Sunrise}
-          </h3>
-          <h3 style={{ marginLeft: "30px" }}>
-            Sunset: {this.weatherInfo.Sunset}
-          </h3>
-          <h3>
-            <i style={{ margin: "5px" }} className="fas fa-cloud-moon"></i>
+          </h5>
+          <h5 style={{ marginLeft: '30px' }}>Sunset: {this.weatherInfo.Sunset}</h5>
+          <h5>
+            <i style={{ margin: '5px' }} className="fas fa-cloud-moon"></i>
             Moonset: {this.weatherInfo.Moonset}
-          </h3>
-          <h3 style={{ marginLeft: "30px" }}>
-            Moon Phase: {this.weatherInfo.MoonPhase}
-          </h3>
+          </h5>
+          <h5 style={{ marginLeft: '30px' }}>Moon Phase: {this.weatherInfo.MoonPhase}</h5>
         </div>
       </div>
     );
