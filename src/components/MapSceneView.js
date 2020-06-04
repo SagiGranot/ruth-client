@@ -15,6 +15,7 @@ import { getWeather } from '../api/getWeather';
 import { getGeoObjects } from '../api/getGeoObjects';
 import { deployMarkers } from '../markers/deploy';
 import GeoObject from '../schema/GeoObject';
+import { Camera } from './Camera';
 var geolocate = require('mock-geolocation');
 
 // import { mockGeolocation } from '../utils/mockLocation';
@@ -85,29 +86,38 @@ export class MapSceneView extends React.Component {
         this.setUserMarkerPosition(deployments, this.userId);
         const deployGraphics = this.createDeployGraphics(deployments);
         const objectGraphics = this.createObjectGraphics(objects);
-
         const deployLayer = this.createLayer(deployLayerOpt, deployGraphics);
         const objectLayer = this.createLayer(objectLayerOpt, objectGraphics);
-        this.view.ui.add(track, 'top-left');
 
         this.view.when(() => {
           var prevLocation = this.view.center;
 
-          track.on('track', function () {
-            var location = track.graphic.geometry;
-
-            this.view
-              .goTo({
+          function updateCameraPosition(view, location) {
+            try {
+              view.goTo({
                 center: location,
                 tilt: 65,
-                heading: 360 - getHeading(location, prevLocation), // only applies to SceneView
-              })
-              .catch(function (error) {
-                if (error.name != 'AbortError') {
-                  console.error(error);
-                }
+                zoom: 15,
+                heading: 360 - getHeading(location, prevLocation), // only applies to SceneView);
               });
+            } catch (error) {
+              if (error.name != 'AbortError') {
+                console.error(error);
+              }
+            }
+          }
 
+          var element = document.createElement('div');
+          element.className = 'esri-icon-locate esri-widget--button esri-widget';
+          element.addEventListener('click', (evt) => {
+            var location = track.graphic.geometry;
+            updateCameraPosition(this.view, location);
+          });
+          this.view.ui.add(element, 'top-left');
+
+          track.on('track', function () {
+            var location = track.graphic.geometry;
+            updateCameraPosition(this.view, location);
             prevLocation = location.clone();
           });
 
@@ -121,21 +131,21 @@ export class MapSceneView extends React.Component {
             return -90 + angleInDegrees;
           }
           this.addLayer([deployLayer, objectLayer]);
-          // this.renderEsriComponent(LineOfSight, { deployments, socketio: this.socketio }, 'bottom-right');
-          this.renderEsriComponent(
-            Viewshed,
-            {
-              Utils,
-              deployments,
-              socketio: this.socketio,
-              track,
-              userId: this.userId,
-            },
-            'bottom-right'
-          );
+
+          const viewShedProps = {
+            Utils,
+            deployments,
+            socketio: this.socketio,
+            track,
+            userId: this.userId,
+          };
+
+          this.view.ui.add(track, 'top-left');
+          this.renderEsriComponent(Viewshed, viewShedProps, 'bottom-right');
           this.renderEsriComponent(ObjectEditor, { socketio: this.socketio });
           this.renderEsriComponent(DayLight);
           this.renderEsriComponent(Weather, { weather });
+          this.renderEsriComponent(Camera, {}, 'top-left');
           this.renderEsriComponent(DeltaLogs, {
             socketio: this.socketio,
             deltas,
@@ -220,10 +230,10 @@ export class MapSceneView extends React.Component {
     return this.esriModules.Utils.xyToLngLat(x, y);
   }
 
-  renderEsriComponent(component, props = {}) {
+  renderEsriComponent(component, props = {}, position = null) {
     const Components = component;
     const elm = document.createElement('div');
-    this.view.ui.add(elm);
+    this.view.ui.add(elm, position);
     ReactDOM.render(<Components view={this.view} {...props} />, elm);
   }
 

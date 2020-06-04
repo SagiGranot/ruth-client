@@ -18,20 +18,19 @@ export const Notification = ({ socketio, userId }) => {
     addToast(`${content}`, { appearance: type, autoDismiss: true });
   };
 
-  const showEnemyCloser = async ({ content, type }) => {
-    console.log(content);
-    addToast(
-      `ENEMY ${content.data.deployId} CLOSER FROM ${content.data.bearing} ! `,
-      {
-        appearance: "warning",
-        autoDismiss: true,
-      }
-    );
+  const showEnemyCloser = async ({ enemy, bearing }) => {
+    console.log(bearing);
+    console.log(enemy);
+    let angle = parseInt(bearing, 10);
+    addToast(`ENEMY APPROACHE FROM ${angle} degrees! `, {
+      appearance: "warning",
+      autoDismiss: true,
+    });
   };
 
-  const showEnemySurrounding = async ({ content, type }) => {
-    console.log(content);
-    addToast(`ENEMY SURROUNDING in ${content.data.deployId}!`, {
+  const showEnemySurrounding = async ({ surrounded, area }) => {
+    console.log(surrounded, area);
+    addToast(`ENEMY SURROUNDING in ${area / 1000} !`, {
       appearance: "error",
       autoDismiss: true,
     });
@@ -40,7 +39,7 @@ export const Notification = ({ socketio, userId }) => {
   const showSuspectBuilding = async ({ content, type }) => {
     console.log(content);
     content.data.forEach((building) => {
-      addToast(`SUSPECT BUILDING ${building.deployId}`, {
+      addToast(`SUSPECT BUILDING -- `, {
         appearance: "info",
         autoDismiss: true,
       });

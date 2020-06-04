@@ -12,7 +12,7 @@ export class ObjectEditor extends Component {
       css: false,
     }).then(([Editor, Expand]) => {
       this.props.view.when(() => {
-        this.props.socketio.on('SUSPECT-BUILDING', this.setObjectSuspicious);
+        this.props.socketio.on('SUSPECT-BUILDING', this.setObjectsSuspicious);
         this.objectsLayer = this.props.view.map.allLayers.find((layer) => layer.title === 'objects');
 
         // this.props.view.popup.autoOpenEnabled = false;

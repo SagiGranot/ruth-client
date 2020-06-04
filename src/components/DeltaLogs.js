@@ -49,6 +49,7 @@ export class DeltaLogs extends React.Component {
       );
 
       this.deltasLogs = this.props.deltas;
+      //console.log(this.deltasLogs[1].data[0].area);
       window.addEventListener("resize", () => {
         this.setState({ windowWidth: document.body.clientWidth });
       });
@@ -86,6 +87,7 @@ export class DeltaLogs extends React.Component {
           }}
         >
           {this.deltasLogs.map((value, index) => {
+            //console.log(value);
             const time = value.timestamp
               ? new Date(value.timestamp)
               : new Date(Date.now());
@@ -137,6 +139,7 @@ export class DeltaLogs extends React.Component {
                   {time.toDateString()} --- {time.getUTCHours()}:
                   {time.getMinutes()}
                 </h5>
+                {/* <h5>Area: {value[1].data[0].area.area}</h5> */}
               </div>
             );
           })}
