@@ -434,11 +434,12 @@ export class Viewshed extends Component {
       if (isEnemyHighlight) {
         //show highlight enemy viewshed
         const enemyDeploy = await this.queryByObjectId(highlightObject.OBJECTID);
-        debugger;
         const enemyDeployId = enemyDeploy.attributes.deployId;
         let enemyViewshed = this.getEnemyViewshed(enemyDeployId);
-        enemyViewshed.forEach((viewshedPoint) => (viewshedPoint.geometry.type = 'polygon'));
-        viewshed = enemyViewshed;
+        if (enemyViewshed) {
+          enemyViewshed.forEach((viewshedPoint) => (viewshedPoint.geometry.type = 'polygon'));
+          viewshed = enemyViewshed;
+        }
       }
       //show viewshed inside circle if enemy is not highlight
       this.graphicsLayer.removeAll();
@@ -459,6 +460,7 @@ export class Viewshed extends Component {
 
   getEnemyViewshed(enemyDeployId) {
     const moveCounter = enemiesViewsheds[enemyDeployId].moveCounter;
+    if (moveCounter === -1) return null;
     return enemiesViewsheds[enemyDeployId].viewsheds[moveCounter];
   }
 
