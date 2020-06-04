@@ -1,5 +1,6 @@
 import React from 'react';
 import { DefaultToast } from 'react-toast-notifications';
+import enemyDirectionIcon from '../resources/images/enemy_direction.png';
 
 export const CustomToast = ({ children, ...props }) => {
   const mystyle = () => {
@@ -13,9 +14,7 @@ export const CustomToast = ({ children, ...props }) => {
   return (
     <DefaultToast {...props}>
       {children}
-      {props.bearing ? (
-        <img src={require('../resources/images/enemy_direction.png')} alt="direction" style={mystyle()} />
-      ) : null}
+      {props.bearing ? <img src={enemyDirectionIcon} alt="direction" style={mystyle()} /> : null}
     </DefaultToast>
   );
 };
