@@ -256,7 +256,6 @@ export class Viewshed extends Component {
       const enemiesToUpdates = deploysToUpdate.filter((deploy) => deploy.attributes.deployType === 'Enemy');
       // const enemiesSet = uniqBy([...enemiesToUpdates, ...enemyDeploys], 'attributes.deployId');
 
-      console.log('enemiesToUpdates.length ' + enemiesToUpdates.length);
       if (enemiesToUpdates.length > 0) {
         // viewshedToDraw = await this.calcViewshed(enemiesSet);
         this.viewshed = await this.calcViewshed(enemiesToUpdates);
@@ -434,16 +433,15 @@ export class Viewshed extends Component {
 
       if (isEnemyHighlight) {
         //show highlight enemy viewshed
-        console.log('show highlight enemy viewshed...');
         const enemyDeploy = await this.queryByObjectId(highlightObject.OBJECTID);
-        debugger;
         const enemyDeployId = enemyDeploy.attributes.deployId;
         let enemyViewshed = this.getEnemyViewshed(enemyDeployId);
-        enemyViewshed.forEach((viewshedPoint) => (viewshedPoint.geometry.type = 'polygon'));
-        viewshed = enemyViewshed;
+        if (enemyViewshed) {
+          enemyViewshed.forEach((viewshedPoint) => (viewshedPoint.geometry.type = 'polygon'));
+          viewshed = enemyViewshed;
+        }
       }
       //show viewshed inside circle if enemy is not highlight
-      console.log('show user viewshed...');
       this.graphicsLayer.removeAll();
       this.graphicsLayer.addMany(viewshed);
       this.graphicsLayer.add(this.userCircleGraphic);
@@ -462,6 +460,7 @@ export class Viewshed extends Component {
 
   getEnemyViewshed(enemyDeployId) {
     const moveCounter = enemiesViewsheds[enemyDeployId].moveCounter;
+    if (moveCounter === -1) return null;
     return enemiesViewsheds[enemyDeployId].viewsheds[moveCounter];
   }
 
