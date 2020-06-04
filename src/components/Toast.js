@@ -13,7 +13,9 @@ export const CustomToast = ({ children, ...props }) => {
   return (
     <DefaultToast {...props}>
       {children}
-      <img src={require('../resources/images/enemy_direction.png')} alt="direction" style={mystyle()} />
+      {props.bearing ? (
+        <img src={require('../resources/images/enemy_direction.png')} alt="direction" style={mystyle()} />
+      ) : null}
     </DefaultToast>
   );
 };
