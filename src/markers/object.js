@@ -39,6 +39,37 @@ const objectMarker = {
       ],
     },
   },
+
+  popupTemplate: {
+    title: '{category}',
+    content: [
+      {
+        type: 'fields',
+        fieldInfos: [
+          {
+            fieldName: 'objectId',
+            label: 'Building Id',
+          },
+          {
+            fieldName: 'height',
+            label: 'Height',
+          },
+          {
+            fieldName: 'additionalInfo',
+            label: 'Description',
+          },
+          {
+            fieldName: 'tag',
+            label: 'Tag',
+          },
+          {
+            fieldName: 'deploys',
+            label: 'Enemies inside',
+          },
+        ],
+      },
+    ],
+  },
 };
 
 export { objectMarker };

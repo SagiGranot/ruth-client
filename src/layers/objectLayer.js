@@ -27,6 +27,16 @@ export const objectLayerOpt = {
       alias: 'INFO',
       type: 'string',
     },
+    {
+      name: 'category',
+      alias: 'CATAGORY',
+      type: 'string',
+    },
+    {
+      name: 'deploys',
+      alias: 'DEPLOYS',
+      type: 'string',
+    },
   ],
   renderer: {
     type: 'unique-value',
@@ -45,5 +55,5 @@ export const objectLayerOpt = {
     ],
     uniqueValueInfos: [objectMarker.BuildingMarker, objectMarker.SuspiciousMarker],
   },
-  // labelingInfo: [Marker.amountLabel],
+  popupTemplate: objectMarker.popupTemplate,
 };
