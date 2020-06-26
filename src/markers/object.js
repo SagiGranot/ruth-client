@@ -47,7 +47,7 @@ const objectMarker = {
         type: 'fields',
         fieldInfos: [
           {
-            fieldName: 'objectId',
+            fieldName: 'buildingId',
             label: 'Building Id',
           },
           {

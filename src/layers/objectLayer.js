@@ -8,8 +8,8 @@ export const objectLayerOpt = {
   spatialReference: { wkid: 4326 },
   fields: [
     {
-      name: 'objectId',
-      alias: 'ID',
+      name: 'buildingId',
+      alias: 'BUILD_ID',
       type: 'string',
     },
     {
