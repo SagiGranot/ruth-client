@@ -10,11 +10,75 @@ const deployMarkers = {
           width: 200,
           height: 200,
           resource: {
-            // origin:
-            href: 'https://i.imgur.com/qT34iLD.png',
-            //href: "https://i.imgur.com/fri8Mo0.png",
+            href: 'https://i.imgur.com/LskUsCJ.png',
           },
-          size: 40,
+          size: 60,
+        },
+      ],
+      styleOrigin: {
+        styleName: 'EsriRecreationStyle',
+        name: 'Slide',
+      },
+    },
+  },
+  FriendlyMissle: {
+    value: 'Friendly, Missle',
+    symbol: {
+      type: 'point-3d',
+      symbolLayers: [
+        {
+          type: 'icon',
+          anchor: 'center',
+          width: 200,
+          height: 200,
+          resource: {
+            href: 'https://i.imgur.com/hc6G4em.png',
+          },
+          size: 60,
+        },
+      ],
+      styleOrigin: {
+        styleName: 'EsriRecreationStyle',
+        name: 'Slide',
+      },
+    },
+  },
+  FriendlyCar: {
+    value: 'Friendly, Car',
+    symbol: {
+      type: 'point-3d',
+      symbolLayers: [
+        {
+          type: 'icon',
+          anchor: 'center',
+          width: 200,
+          height: 200,
+          resource: {
+            href: 'https://i.imgur.com/o6DVv9o.png',
+          },
+          size: 60,
+        },
+      ],
+      styleOrigin: {
+        styleName: 'EsriRecreationStyle',
+        name: 'Slide',
+      },
+    },
+  },
+  FriendlyTroop: {
+    value: 'Friendly, Troop',
+    symbol: {
+      type: 'point-3d',
+      symbolLayers: [
+        {
+          type: 'icon',
+          anchor: 'center',
+          width: 200,
+          height: 200,
+          resource: {
+            href: 'https://i.imgur.com/g9J1K7C.png',
+          },
+          size: 50,
         },
       ],
       styleOrigin: {
@@ -34,9 +98,63 @@ const deployMarkers = {
           width: 100,
           height: 100,
           resource: {
-            href: 'https://i.imgur.com/JmcioEL.png',
+            href: 'https://i.imgur.com/pEczNB5.png',
           },
-          size: 40,
+          size: 60,
+        },
+      ],
+    },
+  },
+  EnemyMissle: {
+    value: 'Enemy, Missle',
+    symbol: {
+      type: 'point-3d',
+      symbolLayers: [
+        {
+          type: 'icon',
+          anchor: 'center',
+          width: 100,
+          height: 100,
+          resource: {
+            href: 'https://i.imgur.com/DOO5yjV.png',
+          },
+          size: 60,
+        },
+      ],
+    },
+  },
+  EnemyCar: {
+    value: 'Enemy, Car',
+    symbol: {
+      type: 'point-3d',
+      symbolLayers: [
+        {
+          type: 'icon',
+          anchor: 'center',
+          width: 100,
+          height: 100,
+          resource: {
+            href: 'https://i.imgur.com/2am7oda.png',
+          },
+          size: 60,
+        },
+      ],
+    },
+  },
+  EnemyTroop: {
+    value: 'Enemy, Troop',
+    symbol: {
+      type: 'point-3d',
+      symbolLayers: [
+        {
+          type: 'icon',
+          anchor: 'center',
+          width: 100,
+          height: 100,
+          resource: {
+            href: 'https://i.imgur.com/tryjtOI.png',
+          },
+          size: 50,
         },
       ],
     },

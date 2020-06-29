@@ -8,8 +8,8 @@ export const objectLayerOpt = {
   spatialReference: { wkid: 4326 },
   fields: [
     {
-      name: 'objectId',
-      alias: 'ID',
+      name: 'buildingId',
+      alias: 'BUILD_ID',
       type: 'string',
     },
     {
@@ -25,6 +25,16 @@ export const objectLayerOpt = {
     {
       name: 'additionalInfo',
       alias: 'INFO',
+      type: 'string',
+    },
+    {
+      name: 'category',
+      alias: 'CATAGORY',
+      type: 'string',
+    },
+    {
+      name: 'deploys',
+      alias: 'DEPLOYS',
       type: 'string',
     },
   ],
@@ -43,7 +53,13 @@ export const objectLayerOpt = {
         field: 'ROTATION',
       },
     ],
-    uniqueValueInfos: [objectMarker.BuildingMarker, objectMarker.SuspiciousMarker],
+    uniqueValueInfos: [
+      objectMarker.BuildingMarker,
+      objectMarker.SuspiciousMarker,
+      objectMarker.HighRisk,
+      objectMarker.MedRisk,
+      objectMarker.LowRisk,
+    ],
   },
-  // labelingInfo: [Marker.amountLabel],
+  popupTemplate: objectMarker.popupTemplate,
 };

@@ -15,6 +15,8 @@ export const Notification = ({ socketio, userId }) => {
     socketio.on('ENEMY_SURROUNDING_' + userId, showEnemySurrounding);
     socketio.on('SUSPECT-BUILDING', showSuspectBuilding);
     socketio.on('ASSIST_FRIENDLY_' + userId, showAssist);
+    socketio.on('ENEMY_SPOTTED_' + userId, showSpottedEnemy);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -22,18 +24,20 @@ export const Notification = ({ socketio, userId }) => {
     addToast(`${content}`, { appearance: type, autoDismiss: true });
   };
 
-  const showEnemyCloser = async ({ enemy, bearing }) => {
+  const showEnemyCloser = async ({ enemy, bearing, distance }) => {
     let degree = parseInt(bearing, 10);
-    addToast(`ENEMY ${enemy} APPROACHE FROM `, {
+    addToast(`ENEMY ${enemy} APPROACH ${distance.toFixed()}km FROM `, {
       appearance: 'warning',
       autoDismiss: true,
+      autoDismissTimeout: 10000,
       bearing: degree,
     });
   };
 
   const showEnemySurrounding = async ({ surrounded, area }) => {
-    addToast(`ENEMY SURROUNDING in ${area / 1000} !`, {
+    addToast(`ENEMY SURROUNDING in ${area.toFixed() / 1000}m !`, {
       appearance: 'error',
+      autoDismissTimeout: 10000,
       autoDismiss: true,
     });
   };
@@ -42,6 +46,7 @@ export const Notification = ({ socketio, userId }) => {
     content.data.forEach((building) => {
       addToast(`SUSPECT BUILDING -- `, {
         appearance: 'info',
+        autoDismissTimeout: 10000,
         autoDismiss: true,
       });
     });
@@ -50,6 +55,15 @@ export const Notification = ({ socketio, userId }) => {
   const showAssist = async ({ content, type }) => {
     addToast(`ASSIST FRIENDLY ALPHA ${content.data.deployId}`, {
       appearance: 'success',
+      autoDismissTimeout: 10000,
+      autoDismiss: true,
+    });
+  };
+
+  const showSpottedEnemy = async (data) => {
+    addToast(`ENEMY SPOTTED `, {
+      appearance: 'error',
+      autoDismissTimeout: 10000,
       autoDismiss: true,
     });
   };
