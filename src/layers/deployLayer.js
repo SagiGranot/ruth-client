@@ -44,7 +44,13 @@ export const deployLayerOpt = {
     fieldDelimiter: ', ',
     uniqueValueInfos: [
       deployMarkers.FriendlyTank,
+      deployMarkers.FriendlyMissle,
+      deployMarkers.FriendlyCar,
+      deployMarkers.FriendlyTroop,
       deployMarkers.EnemyTank,
+      deployMarkers.EnemyMissle,
+      deployMarkers.EnemyCar,
+      deployMarkers.EnemyTroop,
       // deployMarkers.User,
       deployMarkers.EnemyRPG,
       deployMarkers.FriendlyRPG,

@@ -15,6 +15,8 @@ export const Notification = ({ socketio, userId }) => {
     socketio.on('ENEMY_SURROUNDING_' + userId, showEnemySurrounding);
     socketio.on('SUSPECT-BUILDING', showSuspectBuilding);
     socketio.on('ASSIST_FRIENDLY_' + userId, showAssist);
+    socketio.on('ENEMY_SPOTTED_' + userId, showSpottedEnemy);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -53,6 +55,14 @@ export const Notification = ({ socketio, userId }) => {
   const showAssist = async ({ content, type }) => {
     addToast(`ASSIST FRIENDLY ALPHA ${content.data.deployId}`, {
       appearance: 'success',
+      autoDismissTimeout: 10000,
+      autoDismiss: true,
+    });
+  };
+
+  const showSpottedEnemy = async (data) => {
+    addToast(`ENEMY SPOTTED `, {
+      appearance: 'error',
       autoDismissTimeout: 10000,
       autoDismiss: true,
     });

@@ -53,7 +53,13 @@ export const objectLayerOpt = {
         field: 'ROTATION',
       },
     ],
-    uniqueValueInfos: [objectMarker.BuildingMarker, objectMarker.SuspiciousMarker],
+    uniqueValueInfos: [
+      objectMarker.BuildingMarker,
+      objectMarker.SuspiciousMarker,
+      objectMarker.HighRisk,
+      objectMarker.MedRisk,
+      objectMarker.LowRisk,
+    ],
   },
   popupTemplate: objectMarker.popupTemplate,
 };
